@@ -6,10 +6,9 @@ import { computeScaleBar, formatCoordinatesDMS } from './utils/geoMath';
 import {
   CameraTelemetry,
   GlobeCommand,
-  GoogleEarthGlobe,
-} from './components/GoogleEarthGlobe';
+  LeafletMap,
+} from './components/LeafletMap';
 import { TopBar } from './components/TopBar';
-import { Minimap } from './components/Minimap';
 import { TopFindingPopup } from './components/TopFindingPopup';
 import { SiteAnalysisPanel } from './components/SiteAnalysisPanel';
 import { AllSitesDrawer } from './components/AllSitesDrawer';
@@ -19,9 +18,6 @@ export default function App() {
   const topFinding = useMemo(() => getTopFindingSite(ANALOG_SITES), []);
 
   const [targetFilter, setTargetFilter] = useState<TargetFilter>('All');
-  const [showLabels, setShowLabels] = useState(false);
-  const [quotaExceeded, setQuotaExceeded] = useState(false);
-
   const [selectedSite, setSelectedSite] = useState<AnalogSite | null>(null);
   const [showSitesList, setShowSitesList] = useState(false);
   const [showDataSources, setShowDataSources] = useState(false);
@@ -40,15 +36,7 @@ export default function App() {
     lat: 6,
     lon: 78,
     altitudeKm: 19370,
-    headingDeg: 0,
-    isTilted3D: false,
   });
-
-  useEffect(() => {
-    const onQuotaExceeded = () => setQuotaExceeded(true);
-    window.addEventListener('gmp-quota-exceeded', onQuotaExceeded);
-    return () => window.removeEventListener('gmp-quota-exceeded', onQuotaExceeded);
-  }, []);
 
   const visibleSites = useMemo(
     () => filterAnalogSites(ANALOG_SITES, { targetFilter }),
@@ -61,7 +49,7 @@ export default function App() {
   }, []);
 
   const flyToSite = useCallback(
-    (site: AnalogSite, altitudeKm = 24, tilt3D = true, recordHistory = true) => {
+    (site: AnalogSite, altitudeKm = 24, recordHistory = true) => {
       setSelectedSite(site);
       setShowSitesList(false);
       issueCommand({
@@ -69,7 +57,6 @@ export default function App() {
         lat: site.lat,
         lon: site.lon,
         altitudeKm,
-        tilt3D,
       });
 
       if (recordHistory) {
@@ -87,7 +74,7 @@ export default function App() {
 
   const handleSelectPin = useCallback(
     (site: AnalogSite) => {
-      flyToSite(site, 24, true, true);
+      flyToSite(site, 24, true);
     },
     [flyToSite]
   );
@@ -95,7 +82,7 @@ export default function App() {
   const handleInspectTopFinding = useCallback(
     (site: AnalogSite) => {
       setShowTopFindingPopup(false);
-      flyToSite(site, 24, true, true);
+      flyToSite(site, 24, true);
     },
     [flyToSite]
   );
@@ -105,7 +92,7 @@ export default function App() {
     const nextIdx = historyIdx - 1;
     setHistoryIdx(nextIdx);
     const site = history[nextIdx];
-    if (site) flyToSite(site, 24, true, false);
+    if (site) flyToSite(site, 24, false);
   }, [flyToSite, history, historyIdx]);
 
   const handleGoForward = useCallback(() => {
@@ -113,19 +100,8 @@ export default function App() {
     const nextIdx = historyIdx + 1;
     setHistoryIdx(nextIdx);
     const site = history[nextIdx];
-    if (site) flyToSite(site, 24, true, false);
+    if (site) flyToSite(site, 24, false);
   }, [flyToSite, history, historyIdx]);
-
-  const handleResetGlobe = useCallback(() => {
-    setSelectedSite(null);
-    issueCommand({
-      type: 'flyTo',
-      lat: 6,
-      lon: 78,
-      altitudeKm: 19370,
-      tilt3D: false,
-    });
-  }, [issueCommand]);
 
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
@@ -146,38 +122,16 @@ export default function App() {
 
   return (
     <div className="w-screen h-screen flex flex-col bg-black overflow-hidden">
-      {quotaExceeded && (
-        <div className="bg-amber-50 border-b border-amber-200 text-amber-900 px-4 py-2.5 text-xs md:text-sm text-center sticky top-0 z-50 shadow-sm">
-          <span>
-            Google Maps Platform quota reached. If you are the app owner, visit{' '}
-            <a
-              href="https://developers.google.com/maps/ai/ai-studio?utm_campaign=gmp_mcp_codeassist_v1_aistudio#quota_exceeded_errors"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="underline font-semibold text-amber-950 hover:text-amber-800"
-            >
-              maps developer site
-            </a>{' '}
-            for instructions to update your account.
-          </span>
-        </div>
-      )}
-
-      {/* Top Google Earth-style Navigation & Search Bar */}
+      {/* Top Navigation & Search Bar */}
       <TopBar
         allSites={ANALOG_SITES}
         targetFilter={targetFilter}
         onTargetFilterChange={setTargetFilter}
-        showLabels={showLabels}
-        onToggleLabels={() => setShowLabels((v) => !v)}
-        isTilted3D={telemetry.isTilted3D}
-        onToggleTilt={() => issueCommand({ type: 'toggleTilt' })}
         canGoBack={historyIdx > 0}
         canGoForward={historyIdx < history.length - 1}
         onGoBack={handleGoBack}
         onGoForward={handleGoForward}
-        onResetGlobe={handleResetGlobe}
-        onSelectSite={(site) => flyToSite(site, 24, true, true)}
+        onSelectSite={(site) => flyToSite(site, 24, true)}
         showSitesList={showSitesList}
         onToggleSitesList={() => {
           setShowSitesList((v) => !v);
@@ -187,25 +141,24 @@ export default function App() {
         onOpenDataSources={() => setShowDataSources(true)}
       />
 
-      {/* Main 3D Google Earth / Maps Stage */}
+      {/* Main Satellite Map Stage (Leaflet + OpenStreetMap & Esri World Imagery) */}
       <main className="relative flex-1 w-full overflow-hidden">
-        <GoogleEarthGlobe
+        <LeafletMap
           sites={visibleSites}
           selectedSiteId={selectedSite?.id ?? null}
-          showLabels={showLabels}
           command={globeCommand}
           onSelectSite={handleSelectPin}
           onTelemetryChange={setTelemetry}
         />
 
-        {/* Left Side Detail / Catalog Overlay (never covers central globe or top tab) */}
-        <div className="pointer-events-none absolute top-[96px] left-4 z-20 flex flex-col gap-3">
+        {/* Left Side Detail / Catalog Overlay */}
+        <div className="pointer-events-none absolute top-[96px] left-4 z-[1040] flex flex-col gap-3">
           {selectedSite ? (
             <div className="pointer-events-auto">
               <SiteAnalysisPanel
                 site={selectedSite}
                 onClose={() => setSelectedSite(null)}
-                onZoomCloser={(site) => flyToSite(site, 6, true, false)}
+                onZoomCloser={(site) => flyToSite(site, 6, false)}
                 onOpenDataSources={() => setShowDataSources(true)}
               />
             </div>
@@ -214,22 +167,15 @@ export default function App() {
               <AllSitesDrawer
                 sites={visibleSites}
                 selectedSiteId={null}
-                onSelectSite={(site) => flyToSite(site, 24, true, true)}
+                onSelectSite={(site) => flyToSite(site, 24, true)}
                 onClose={() => setShowSitesList(false)}
               />
             </div>
           ) : null}
         </div>
 
-        {/* Bottom-Left Google Earth Minimap & Attribution (positioned above Google Maps built-in watermark) */}
-        <div className="pointer-events-none absolute bottom-10 left-3.5 z-20 flex items-end gap-3">
-          <div className="pointer-events-auto">
-            <Minimap
-              lat={telemetry.lat}
-              lon={telemetry.lon}
-              onResetOverview={handleResetGlobe}
-            />
-          </div>
+        {/* Bottom-Left Data Attribution (Minimap removed per request) */}
+        <div className="pointer-events-none absolute bottom-3 left-3.5 z-[1040] flex items-center">
           <div className="pointer-events-auto flex items-center gap-2.5 text-[11px] text-[#d2d5da] bg-[#1f2023]/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
             <span className="font-display font-semibold text-white tracking-tight">
               TerraAnalog
@@ -245,8 +191,8 @@ export default function App() {
           </div>
         </div>
 
-        {/* Bottom-Right Top Finding Popup + Google Earth 3D/Compass/Zoom & Telemetry */}
-        <div className="pointer-events-none absolute bottom-3 right-3.5 z-20 flex flex-col items-end gap-3">
+        {/* Bottom-Right Top Finding Popup + Zoom Controls & Telemetry */}
+        <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-3">
           {showTopFindingPopup && (
             <div className="pointer-events-auto">
               <TopFindingPopup
@@ -257,52 +203,14 @@ export default function App() {
             </div>
           )}
 
-          {/* Circular 3D / Compass / Zoom Control Cluster */}
+          {/* Zoom Control Cluster (3D & Compass removed per user request) */}
           <div className="pointer-events-auto flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() => issueCommand({ type: 'toggleTilt' })}
-              title={telemetry.isTilted3D ? 'Kembali ke tampilan 2D nadir' : 'Miringkan perspektif 3D'}
-              aria-label={telemetry.isTilted3D ? 'Ubah ke tampilan 2D' : 'Ubah ke tampilan miring 3D'}
-              data-testid="toggle-3d-btn"
-              className={`w-9 h-9 rounded-full border flex items-center justify-center text-[11px] font-display font-bold transition-colors ${
-                telemetry.isTilted3D
-                  ? 'bg-[#8ab4f8] text-[#171717] border-[#8ab4f8]'
-                  : 'bg-[#1f2023]/60 backdrop-blur-md text-[#e8eaed] border-white/12 hover:bg-white/15'
-              }`}
-            >
-              {telemetry.isTilted3D ? '2D' : '3D'}
-            </button>
-
-            <button
-              type="button"
-              onClick={() => issueCommand({ type: 'resetNorth' })}
-              title="Reset arah Utara ke atas"
-              aria-label="Reset arah Utara kompas"
-              data-testid="compass-reset-btn"
-              className="w-9 h-9 rounded-full bg-[#1f2023]/60 backdrop-blur-md border border-white/12 hover:bg-white/15 flex items-center justify-center transition-colors"
-            >
-              <svg
-                width="18"
-                height="18"
-                viewBox="0 0 24 24"
-                aria-hidden="true"
-                style={{
-                  transform: `rotate(${(-telemetry.headingDeg).toFixed(1)}deg)`,
-                  transition: 'transform 150ms ease-out',
-                }}
-              >
-                <polygon points="12,3 15,12 12,11 9,12" fill="#ea4335" />
-                <polygon points="12,21 15,12 12,13 9,12" fill="#e8eaed" />
-              </svg>
-            </button>
-
             <div className="h-9 rounded-full bg-[#1f2023]/60 backdrop-blur-md border border-white/12 flex items-center overflow-hidden">
               <button
                 type="button"
                 onClick={() => issueCommand({ type: 'zoom', zoomFactor: 1.8 })}
                 title="Perkecil tampilan"
-                aria-label="Perkecil zoom globe"
+                aria-label="Perkecil zoom peta"
                 data-testid="zoom-out-btn"
                 className="w-9 h-full flex items-center justify-center text-[#e8eaed] hover:bg-white/10 transition-colors"
               >
@@ -313,7 +221,7 @@ export default function App() {
                 type="button"
                 onClick={() => issueCommand({ type: 'zoom', zoomFactor: 0.55 })}
                 title="Perbesar tampilan"
-                aria-label="Perbesar zoom globe"
+                aria-label="Perbesar zoom peta"
                 data-testid="zoom-in-btn"
                 className="w-9 h-full flex items-center justify-center text-[#e8eaed] hover:bg-white/10 transition-colors"
               >
@@ -323,7 +231,7 @@ export default function App() {
           </div>
 
           {/* Scale Bar + Live Camera Altitude & DMS Coordinates */}
-          <div className="pointer-events-auto flex items-end gap-4 text-[11px] text-[#e8eaed] font-mono-tabular">
+          <div className="pointer-events-auto flex items-end gap-3 text-[11px] text-[#e8eaed] font-mono-tabular bg-[#1f2023]/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
             <div className="flex flex-col items-end">
               <span className="text-[10px] text-[#d2d5da] mb-0.5">{scaleBar.label}</span>
               <div

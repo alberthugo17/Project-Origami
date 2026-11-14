@@ -25,7 +25,7 @@ export const DataSourcesModal: React.FC<DataSourcesModalProps> = ({ onClose }) =
       aria-modal="true"
       aria-label="Sumber Data dan Metodologi Analisis NASA serta Agensi Antariksa"
       data-testid="data-sources-modal"
-      className="fixed inset-0 z-40 flex items-center justify-center bg-black/75 p-4 md:p-8"
+      className="fixed inset-0 z-[1100] flex items-center justify-center bg-black/75 p-4 md:p-8"
     >
       <div className="w-full max-w-5xl max-h-[86vh] flex flex-col rounded-xl bg-[#1f2023]/60 backdrop-blur-md border border-white/15 shadow-2xl overflow-hidden text-[#e8eaed]">
         {/* Header */}

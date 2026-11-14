@@ -2,10 +2,7 @@ import React, { useMemo, useRef, useState } from 'react';
 import {
   ChevronLeft,
   ChevronRight,
-  Compass,
   Database,
-  Globe,
-  Layers,
   List,
   Menu,
   Search,
@@ -18,15 +15,10 @@ interface TopBarProps {
   allSites: AnalogSite[];
   targetFilter: TargetFilter;
   onTargetFilterChange: (filter: TargetFilter) => void;
-  showLabels: boolean;
-  onToggleLabels: () => void;
-  isTilted3D: boolean;
-  onToggleTilt: () => void;
   canGoBack: boolean;
   canGoForward: boolean;
   onGoBack: () => void;
   onGoForward: () => void;
-  onResetGlobe: () => void;
   onSelectSite: (site: AnalogSite) => void;
   showSitesList: boolean;
   onToggleSitesList: () => void;
@@ -38,15 +30,10 @@ export const TopBar: React.FC<TopBarProps> = ({
   allSites,
   targetFilter,
   onTargetFilterChange,
-  showLabels,
-  onToggleLabels,
-  isTilted3D,
-  onToggleTilt,
   canGoBack,
   canGoForward,
   onGoBack,
   onGoForward,
-  onResetGlobe,
   onSelectSite,
   showSitesList,
   onToggleSitesList,
@@ -64,16 +51,12 @@ export const TopBar: React.FC<TopBarProps> = ({
   }, [allSites, searchQuery, searchFocused]);
 
   return (
-    <header className="absolute top-0 left-0 right-0 z-30 w-full bg-[#1f2023]/60 backdrop-blur-md border-b border-white/10 text-[#e8eaed]">
-      {/* Row 1: Google Earth Top Menu Strip */}
+    <header className="absolute top-0 left-0 right-0 z-[1050] w-full bg-[#1f2023]/60 backdrop-blur-md border-b border-white/10 text-[#e8eaed]">
+      {/* Row 1: Top Navigation & Title Strip */}
       <div className="h-9 px-3.5 flex items-center justify-between gap-6 border-b border-white/[0.06]">
         <div className="flex items-center gap-5 min-w-0">
           {/* Brand Logo */}
-          <button
-            type="button"
-            onClick={onResetGlobe}
-            className="flex items-center gap-2.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8ab4f8] rounded"
-          >
+          <div className="flex items-center gap-2.5 shrink-0">
             <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
               <defs>
                 <linearGradient id="earthOrb" x1="0" y1="0" x2="1" y2="1">
@@ -94,17 +77,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             <span className="font-display text-sm font-semibold tracking-tight text-white whitespace-nowrap">
               project Origami
             </span>
-          </button>
+          </div>
 
           {/* Clean single-line navigation links */}
           <nav aria-label="Menu utama" className="hidden sm:flex items-center gap-1 text-xs">
-            <button
-              type="button"
-              onClick={onResetGlobe}
-              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
-            >
-              Tampilan Global
-            </button>
             <button
               type="button"
               onClick={onToggleSitesList}
@@ -116,20 +92,6 @@ export const TopBar: React.FC<TopBarProps> = ({
               }`}
             >
               Situs Analog
-            </button>
-            <button
-              type="button"
-              onClick={onToggleLabels}
-              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
-            >
-              {showLabels ? 'Mode Satelit Murni' : 'Mode Hibrida Label'}
-            </button>
-            <button
-              type="button"
-              onClick={onToggleTilt}
-              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
-            >
-              {isTilted3D ? 'Tampilan Nadir 2D' : 'Perspektif Medan 3D'}
             </button>
             <button
               type="button"
@@ -175,21 +137,9 @@ export const TopBar: React.FC<TopBarProps> = ({
           className="sm:hidden border-b border-white/10 bg-[#1f2023]/95 backdrop-blur-md px-3.5 py-3 space-y-2.5 text-xs shadow-2xl"
         >
           <div className="text-[10px] uppercase tracking-wider text-[#9aa0a6] font-semibold px-1">
-            Navigasi & Tampilan Globe
+            Navigasi & Menu
           </div>
           <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onResetGlobe();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
-            >
-              <Globe className="w-3.5 h-3.5 text-[#8ab4f8]" />
-              <span>Tampilan Global</span>
-            </button>
             <button
               type="button"
               role="menuitem"
@@ -208,53 +158,21 @@ export const TopBar: React.FC<TopBarProps> = ({
               type="button"
               role="menuitem"
               onClick={() => {
-                onToggleLabels();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
-            >
-              <Layers className="w-3.5 h-3.5 text-[#8ab4f8]" />
-              <span>{showLabels ? 'Satelit Murni' : 'Label Hibrida'}</span>
-            </button>
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
-                onToggleTilt();
-                setMobileMenuOpen(false);
-              }}
-              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
-            >
-              <Compass className="w-3.5 h-3.5 text-[#8ab4f8]" />
-              <span>{isTilted3D ? 'Tampilan 2D' : 'Perspektif 3D'}</span>
-            </button>
-          </div>
-
-          <div className="pt-2 border-t border-white/10">
-            <button
-              type="button"
-              role="menuitem"
-              onClick={() => {
                 onOpenDataSources();
                 setMobileMenuOpen(false);
               }}
-              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left font-medium ${
-                showDataSources
-                  ? 'bg-[#8ab4f8] text-[#171717]'
-                  : 'bg-white/10 hover:bg-white/15 border border-white/10 text-[#e8eaed]'
+              className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left ${
+                showDataSources ? 'bg-[#8ab4f8]/20 text-[#8ab4f8]' : 'bg-white/5 hover:bg-white/10 text-[#e8eaed]'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Database className="w-3.5 h-3.5 text-[#8ab4f8]" />
-                <span>Sumber Data & Metodologi</span>
-              </div>
-              <span className="text-[10px] text-[#9aa0a6]">12 Dataset</span>
+              <Database className="w-3.5 h-3.5 text-[#8ab4f8]" />
+              <span>Sumber Data</span>
             </button>
           </div>
         </div>
       )}
 
-      {/* Row 2: Google Earth Floating-Style Search & Toolbar Strip */}
+      {/* Row 2: Search & Celestial Filter Strip */}
       <div className="px-3.5 py-1.5 flex items-center justify-between gap-2.5 bg-black/15">
         <div className="flex items-center gap-2 flex-1 min-w-0">
           {/* Search Input Pill */}
@@ -291,13 +209,13 @@ export const TopBar: React.FC<TopBarProps> = ({
               </button>
             )}
 
-              {/* Search Dropdown */}
-              {searchFocused && searchResults.length > 0 && (
-                <div
-                  role="listbox"
-                  aria-label="Hasil pencarian situs analog"
-                  className="absolute left-0 top-9 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] rounded-xl bg-[#1f2023]/90 backdrop-blur-md border border-white/15 shadow-2xl py-1.5 z-50"
-                >
+            {/* Search Dropdown */}
+            {searchFocused && searchResults.length > 0 && (
+              <div
+                role="listbox"
+                aria-label="Hasil pencarian situs analog"
+                className="absolute left-0 top-9 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] rounded-xl bg-[#1f2023]/90 backdrop-blur-md border border-white/15 shadow-2xl py-1.5 z-50"
+              >
                 {searchResults.map((site) => (
                   <button
                     key={site.id}
@@ -379,55 +297,9 @@ export const TopBar: React.FC<TopBarProps> = ({
               );
             })}
           </div>
-
-          {/* Toolbar Icon Buttons (All Wired) */}
-          <div className="hidden md:flex items-center gap-1 pl-1 border-l border-white/10">
-            <button
-              type="button"
-              onClick={onToggleSitesList}
-              title="Daftar semua situs analog"
-              aria-label="Buka daftar situs analog"
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                showSitesList ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <List className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onToggleLabels}
-              title={showLabels ? 'Ganti ke citra satelit murni' : 'Tampilkan label wilayah hibrida'}
-              aria-label="Toggle lapisan label peta"
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                showLabels ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <Layers className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onToggleTilt}
-              title="Toggle perspektif miring 3D"
-              aria-label="Toggle perspektif miring 3D"
-              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
-                isTilted3D ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
-              }`}
-            >
-              <Compass className="w-4 h-4" />
-            </button>
-            <button
-              type="button"
-              onClick={onResetGlobe}
-              title="Reset Tampilan Global"
-              aria-label="Reset tampilan ke seluruh Bumi"
-              className="w-8 h-8 rounded-full flex items-center justify-center text-[#bdc1c6] hover:bg-white/10 hover:text-white transition-colors"
-            >
-              <Globe className="w-4 h-4" />
-            </button>
-          </div>
         </div>
 
-        {/* Right Primary Action Tab: Sumber Data (hidden on mobile since in dropdown) */}
+        {/* Right Primary Action Tab: Sumber Data */}
         <button
           type="button"
           onClick={onOpenDataSources}

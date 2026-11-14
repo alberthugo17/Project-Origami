@@ -188,7 +188,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#171717] text-xs font-semibold transition-colors whitespace-nowrap"
         >
           <Navigation className="w-3.5 h-3.5" />
-          Zoom Dekat 3D
+          Zoom Dekat
         </button>
         <button
           type="button"
