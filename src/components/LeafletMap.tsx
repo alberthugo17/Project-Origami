@@ -181,15 +181,12 @@ function createPinHtml(
     }
   }
 
-  const pinColor = isCompared
-    ? (isDark && isCartoon ? '#ff6584' : '#c3f73a')
-    : isSelected
-      ? isCartoon
-        ? (isDark ? '#38bdf8' : '#7dd3fc')
-        : '#8ab4f8'
-      : isCartoon && isTop
-        ? (isDark ? '#ff6584' : '#ff6b9e')
-        : site.accentColor;
+  const pinColor =
+    site.targetBody === 'Mars'
+      ? '#ef4444'
+      : site.targetBody === 'Moon'
+        ? '#3b82f6'
+        : '#f97316';
   const scale = isCompared ? 1.32 : isSelected ? 1.25 : isCartoon ? 1.14 : isTop ? 1.15 : 0.95;
   const strokeColor = isCartoon ? (isDark ? '#818cf8' : '#0e1a18') : '#0f172a';
   const strokeWidth = isCartoon ? '2.3' : '1.5';

@@ -139,11 +139,11 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                 value={selectedSiteId}
                 onChange={(e) => setSelectedSiteId(e.target.value)}
                 aria-label="Pilih lokasi untuk simulasi kecocokan material"
-                className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none ${tokens.input}`}
+                className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none max-w-[200px] sm:max-w-[240px] truncate ${tokens.input}`}
               >
                 {ANALOG_SITES.map((s) => (
                   <option key={s.id} value={s.id}>
-                    {s.name} ({s.temperatureProfile.avgC}°C, pH {s.terrainProfile.acidityPh})
+                    {s.name.split('(')[0].trim()}
                   </option>
                 ))}
               </select>

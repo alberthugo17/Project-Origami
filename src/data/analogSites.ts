@@ -133,7 +133,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-srtm', 'esa-sentinel2', 'nasa-lro-lola', 'nasa-mro-crism', 'pvmbg-demnas'],
-    accentColor: '#f59e0b',
+    accentColor: '#f97316',
   },
   {
     id: 'atacama-yungay',
@@ -261,7 +261,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-srtm', 'nasa-mro-hirise', 'nasa-lro-lola', 'usgs-astrogeology'],
-    accentColor: '#38bdf8',
+    accentColor: '#f97316',
   },
   {
     id: 'death-valley',
@@ -389,7 +389,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-lro-lola', 'usgs-astrogeology', 'nasa-srtm', 'jaxa-selene'],
-    accentColor: '#60a5fa',
+    accentColor: '#3b82f6',
   },
   {
     id: 'mcmurdo-dry-valleys',
@@ -453,7 +453,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-lro-lola', 'nasa-earthdata-modis', 'nasa-mro-hirise'],
-    accentColor: '#38bdf8',
+    accentColor: '#f97316',
   },
   {
     id: 'rio-tinto',
@@ -567,7 +567,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['usgs-astrogeology', 'nasa-lro-lola', 'nasa-srtm'],
-    accentColor: '#60a5fa',
+    accentColor: '#3b82f6',
   },
   {
     id: 'kazumura-lava-tubes',
@@ -625,7 +625,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-lro-lola', 'jaxa-selene', 'nasa-mro-hirise'],
-    accentColor: '#a78bfa',
+    accentColor: '#f97316',
   },
   {
     id: 'dallol-danakil',
@@ -739,7 +739,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['esa-sentinel2', 'pvmbg-demnas', 'nasa-mro-crism'],
-    accentColor: '#f59e0b',
+    accentColor: '#ef4444',
   },
   {
     id: 'svalbard-bockfjorden',
@@ -796,7 +796,7 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-mro-crism', 'esa-mars-express', 'nasa-earthdata-modis'],
-    accentColor: '#38bdf8',
+    accentColor: '#ef4444',
   },
   {
     id: 'qaidam-basin',
@@ -910,6 +910,6 @@ export const ANALOG_SITES: AnalogSite[] = [
       },
     ],
     dataSourceIds: ['nasa-lro-lola', 'usgs-astrogeology', 'nasa-srtm'],
-    accentColor: '#60a5fa',
+    accentColor: '#3b82f6',
   },
 ];

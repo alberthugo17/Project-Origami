@@ -1,8 +1,6 @@
 import React, { useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
-  ChevronLeft,
-  ChevronRight,
   Database,
   GitCompareArrows,
   Layers,
@@ -25,10 +23,6 @@ interface TopBarProps {
   allSites: AnalogSite[];
   targetFilter: TargetFilter;
   onTargetFilterChange: (filter: TargetFilter) => void;
-  canGoBack: boolean;
-  canGoForward: boolean;
-  onGoBack: () => void;
-  onGoForward: () => void;
   onSelectSite: (site: AnalogSite) => void;
   showSitesList: boolean;
   onToggleSitesList: () => void;
@@ -47,10 +41,6 @@ export const TopBar: React.FC<TopBarProps> = ({
   allSites,
   targetFilter,
   onTargetFilterChange,
-  canGoBack,
-  canGoForward,
-  onGoBack,
-  onGoForward,
   onSelectSite,
   showSitesList,
   onToggleSitesList,
@@ -108,30 +98,11 @@ export const TopBar: React.FC<TopBarProps> = ({
             aria-label="Kembali ke Peta Origami"
             className="flex items-center gap-2 shrink-0 text-left focus:outline-none group"
           >
-            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
-              <defs>
-                <linearGradient id="earthOrb" x1="0" y1="0" x2="1" y2="1">
-                  <stop offset="0%" stopColor={tokens.isCartoon ? '#c3f73a' : '#8ab4f8'} />
-                  <stop offset="55%" stopColor={tokens.isCartoon ? '#38bdf8' : '#1a73e8'} />
-                  <stop offset="100%" stopColor={tokens.isCartoon ? '#0284c7' : '#0d3b8c'} />
-                </linearGradient>
-              </defs>
-              <circle
-                cx="12"
-                cy="12"
-                r="10.2"
-                fill="url(#earthOrb)"
-                stroke={tokens.isCartoon ? (tokens.isDark ? '#c4b5fd' : '#0e1a18') : 'none'}
-                strokeWidth={tokens.isCartoon ? '1.8' : '0'}
-              />
-              <path
-                d="M3.5 9.5c2.8-1.4 6.2-1 8.8.8 2.7 1.8 6.4 1.6 8.5-.3M4.5 15.2c2.9 1 6.7.3 9.2-1.4 2.1-1.4 4.8-1.5 6.8-.5"
-                stroke={tokens.isCartoon ? '#0e1a18' : '#e0f2fe'}
-                strokeWidth="1.4"
-                fill="none"
-                strokeLinecap="round"
-              />
-            </svg>
+            <img
+              src="/assets/aistudio/Untitled47_20261114195505_b30478be.png"
+              alt="Origami Logo"
+              className="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm"
+            />
             <span className={`font-display text-sm font-extrabold tracking-tight whitespace-nowrap ${tokens.heading}`}>
               Origami
             </span>
@@ -224,7 +195,7 @@ export const TopBar: React.FC<TopBarProps> = ({
         </div>
       </div>
 
-      {/* Smooth Animated Mobile Navigation Dropdown Menu */}
+      {/* Smooth Animated Mobile Navigation Dropdown Menu (Transparent / Translucent) */}
       <AnimatePresence initial={false}>
         {mobileMenuOpen && (
           <motion.div
@@ -236,15 +207,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             animate={{ opacity: 1, height: 'auto', y: 0 }}
             exit={{ opacity: 0, height: 0, y: -8 }}
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-            className={`sm:hidden overflow-hidden border-b ${tokens.divider} ${
-              tokens.isCartoon
-                ? tokens.isDark
-                  ? 'bg-[#151136]/95 backdrop-blur-xl'
-                  : 'bg-[#fdf6e9]/95 backdrop-blur-md'
-                : tokens.isDark
-                  ? 'bg-[#11151d]/92 backdrop-blur-md'
-                  : 'bg-white/92 backdrop-blur-md'
-            }`}
+            className={`sm:hidden overflow-hidden border-b ${tokens.divider} ${tokens.panel}`}
           >
             <div className="px-3.5 py-3 space-y-2.5 text-xs">
               <div className={`text-[11px] font-semibold px-0.5 ${tokens.mutedText}`}>
@@ -258,7 +221,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     onToggleSitesList();
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
                     activePage === 'map' && showSitesList ? tokens.primaryButton : tokens.secondaryButton
                   }`}
                 >
@@ -273,7 +236,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     onToggleMaterialsPage();
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
                     activePage === 'materials' ? tokens.primaryButton : tokens.secondaryButton
                   }`}
                 >
@@ -288,7 +251,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                     onToggleCompareMode();
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
                     compareMode || activePage === 'compare' ? tokens.primaryButton : tokens.secondaryButton
                   }`}
                 >
@@ -302,12 +265,12 @@ export const TopBar: React.FC<TopBarProps> = ({
                     onToggleDataSourcesPage();
                     setMobileMenuOpen(false);
                   }}
-                  className={`flex items-center gap-2 px-3 py-2.5 rounded-lg text-left transition-colors ${
+                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
                     activePage === 'sources' ? tokens.primaryButton : tokens.secondaryButton
                   }`}
                 >
                   <Database className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Sumber Data</span>
+                  <span className="truncate">Sumber</span>
                 </button>
               </div>
             </div>
@@ -391,34 +354,6 @@ export const TopBar: React.FC<TopBarProps> = ({
                   ))}
                 </div>
               )}
-            </div>
-
-            {/* Back / Forward Navigation */}
-            <div className={`hidden sm:flex items-center gap-0.5 pl-1 pr-2 border-r ${tokens.divider}`}>
-              <button
-                type="button"
-                onClick={onGoBack}
-                disabled={!canGoBack}
-                title="Lokasi sebelumnya"
-                aria-label="Lokasi sebelumnya"
-                className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-colors ${
-                  tokens.isDark ? 'text-[#d2d5da] hover:bg-white/10' : 'text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-              <button
-                type="button"
-                onClick={onGoForward}
-                disabled={!canGoForward}
-                title="Lokasi berikutnya"
-                aria-label="Lokasi berikutnya"
-                className={`w-7 h-7 rounded-full flex items-center justify-center disabled:opacity-30 disabled:pointer-events-none transition-colors ${
-                  tokens.isDark ? 'text-[#d2d5da] hover:bg-white/10' : 'text-slate-700 hover:bg-slate-200'
-                }`}
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
             </div>
 
             {/* Target Celestial Body Filter */}

@@ -206,10 +206,6 @@ export default function App() {
         allSites={ANALOG_SITES}
         targetFilter={targetFilter}
         onTargetFilterChange={setTargetFilter}
-        canGoBack={historyIdx > 0}
-        canGoForward={historyIdx < history.length - 1}
-        onGoBack={handleGoBack}
-        onGoForward={handleGoForward}
         onSelectSite={(site) => {
           if (compareMode) {
             handleSelectPin(site);
