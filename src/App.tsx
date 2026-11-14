@@ -1,29 +1,34 @@
 import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
+import { GitCompareArrows, Globe2, Minus, Palette, Plus, X } from 'lucide-react';
 import { ANALOG_SITES, AnalogSite } from './data/analogSites';
-import { TargetFilter, filterAnalogSites, getTopFindingSite } from './utils/analogFilter';
+import { TargetFilter, filterAnalogSites } from './utils/analogFilter';
 import { computeScaleBar, formatCoordinatesDMS } from './utils/geoMath';
+import { ColorTheme, VisualStyle, getThemeTokens } from './types/theme';
 import {
   CameraTelemetry,
   GlobeCommand,
   LeafletMap,
 } from './components/LeafletMap';
-import { TopBar } from './components/TopBar';
-import { TopFindingPopup } from './components/TopFindingPopup';
+import { ActivePage, TopBar } from './components/TopBar';
 import { SiteAnalysisPanel } from './components/SiteAnalysisPanel';
 import { AllSitesDrawer } from './components/AllSitesDrawer';
-import { DataSourcesModal } from './components/DataSourcesModal';
+import { MaterialsInfoPage } from './components/MaterialsInfoPage';
+import { CompareSitesPage } from './components/CompareSitesPage';
+import { DataSourcesPage } from './components/DataSourcesPage';
 
 export default function App() {
-  const topFinding = useMemo(() => getTopFindingSite(ANALOG_SITES), []);
+  const [visualStyle, setVisualStyle] = useState<VisualStyle>('realistic');
+  const [colorTheme, setColorTheme] = useState<ColorTheme>('dark');
+  const [activePage, setActivePage] = useState<ActivePage>('map');
 
   const [targetFilter, setTargetFilter] = useState<TargetFilter>('All');
   const [selectedSite, setSelectedSite] = useState<AnalogSite | null>(null);
   const [showSitesList, setShowSitesList] = useState(false);
-  const [showDataSources, setShowDataSources] = useState(false);
+  const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
 
-  // Startup top-finding popup: appears ONLY on initial load and stays gone once dismissed
-  const [showTopFindingPopup, setShowTopFindingPopup] = useState(true);
+  // Compare two sites state
+  const [compareMode, setCompareMode] = useState(false);
+  const [compareSitesList, setCompareSitesList] = useState<AnalogSite[]>([]);
 
   // Navigation history for back/forward buttons
   const [history, setHistory] = useState<AnalogSite[]>([]);
@@ -38,6 +43,20 @@ export default function App() {
     altitudeKm: 19370,
   });
 
+  // Sync Tailwind .dark class on <html> root cleanly
+  useEffect(() => {
+    const root = document.documentElement;
+    if (colorTheme === 'dark') {
+      root.classList.add('dark');
+    } else {
+      root.classList.remove('dark');
+    }
+    root.dataset.style = visualStyle;
+    root.dataset.theme = colorTheme;
+  }, [colorTheme, visualStyle]);
+
+  const tokens = getThemeTokens(visualStyle, colorTheme);
+
   const visibleSites = useMemo(
     () => filterAnalogSites(ANALOG_SITES, { targetFilter }),
     [targetFilter]
@@ -50,6 +69,7 @@ export default function App() {
 
   const flyToSite = useCallback(
     (site: AnalogSite, altitudeKm = 24, recordHistory = true) => {
+      setActivePage('map');
       setSelectedSite(site);
       setShowSitesList(false);
       issueCommand({
@@ -74,18 +94,59 @@ export default function App() {
 
   const handleSelectPin = useCallback(
     (site: AnalogSite) => {
+      if (compareMode) {
+        setCompareSitesList((prev) => {
+          // Clicking an already-picked site toggles it off
+          if (prev.some((s) => s.id === site.id)) {
+            return prev.filter((s) => s.id !== site.id);
+          }
+          const next = prev.length >= 2 ? [prev[1], site] : [...prev, site];
+          if (next.length === 2) {
+            setActivePage('compare');
+          }
+          return next;
+        });
+        return;
+      }
       flyToSite(site, 24, true);
     },
-    [flyToSite]
+    [compareMode, flyToSite]
   );
 
-  const handleInspectTopFinding = useCallback(
-    (site: AnalogSite) => {
-      setShowTopFindingPopup(false);
-      flyToSite(site, 24, true);
-    },
-    [flyToSite]
-  );
+  const handleExitCompare = useCallback(() => {
+    setCompareMode(false);
+    setCompareSitesList([]);
+    setActivePage('map');
+  }, []);
+
+  const handleToggleCompareMode = useCallback(() => {
+    // Clicking "Bandingkan Lokasi" while active (picking on map OR viewing compare page) cleanly exits back to map
+    if (compareMode || activePage === 'compare') {
+      handleExitCompare();
+      return;
+    }
+
+    setActivePage('map');
+    setSelectedSite(null);
+    setShowSitesList(false);
+    setCompareSitesList([]);
+    setCompareMode(true);
+
+    // Only gently zoom out to global overview if currently zoomed in close, so user sees all 14 pins
+    if (telemetry.altitudeKm < 6000) {
+      issueCommand({
+        type: 'flyTo',
+        lat: 14,
+        lon: 35,
+        altitudeKm: 19370,
+      });
+    }
+  }, [activePage, compareMode, handleExitCompare, issueCommand, telemetry.altitudeKm]);
+
+  const handleOpenMaterial = useCallback((materialId: string | null = null) => {
+    setFocusedMaterialId(materialId);
+    setActivePage('materials');
+  }, []);
 
   const handleGoBack = useCallback(() => {
     if (historyIdx <= 0) return;
@@ -106,24 +167,42 @@ export default function App() {
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (showDataSources) setShowDataSources(false);
-        else if (selectedSite) setSelectedSite(null);
-        else if (showSitesList) setShowSitesList(false);
+        if (activePage === 'materials' || activePage === 'sources') {
+          setActivePage('map');
+          setFocusedMaterialId(null);
+        } else if (activePage === 'compare') {
+          handleExitCompare();
+        } else if (compareMode) {
+          handleExitCompare();
+        } else if (selectedSite) {
+          setSelectedSite(null);
+        } else if (showSitesList) {
+          setShowSitesList(false);
+        }
       }
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [selectedSite, showDataSources, showSitesList]);
+  }, [activePage, compareMode, handleExitCompare, selectedSite, showSitesList]);
 
   const scaleBar = useMemo(
     () => computeScaleBar(telemetry.altitudeKm),
     [telemetry.altitudeKm]
   );
 
+  const isMapVisible = activePage === 'map';
+
   return (
-    <div className="w-screen h-screen flex flex-col bg-black overflow-hidden">
-      {/* Top Navigation & Search Bar */}
+    <div
+      data-visual-style={visualStyle}
+      data-color-theme={colorTheme}
+      data-active-page={activePage}
+      className={`relative w-screen h-screen overflow-hidden transition-colors duration-200 ${tokens.pageCanvas}`}
+    >
+      {/* Translucent Floating Top Header (Persistent Across All Pages) */}
       <TopBar
+        activePage={activePage}
+        onNavigateMap={() => setActivePage('map')}
         allSites={ANALOG_SITES}
         targetFilter={targetFilter}
         onTargetFilterChange={setTargetFilter}
@@ -131,126 +210,271 @@ export default function App() {
         canGoForward={historyIdx < history.length - 1}
         onGoBack={handleGoBack}
         onGoForward={handleGoForward}
-        onSelectSite={(site) => flyToSite(site, 24, true)}
+        onSelectSite={(site) => {
+          if (compareMode) {
+            handleSelectPin(site);
+          } else {
+            flyToSite(site, 24, true);
+          }
+        }}
         showSitesList={showSitesList}
         onToggleSitesList={() => {
+          setActivePage('map');
+          setCompareMode(false);
+          setCompareSitesList([]);
           setShowSitesList((v) => !v);
           if (!showSitesList) setSelectedSite(null);
         }}
-        showDataSources={showDataSources}
-        onOpenDataSources={() => setShowDataSources(true)}
+        onToggleMaterialsPage={() => {
+          if (activePage === 'materials') {
+            setActivePage('map');
+            setFocusedMaterialId(null);
+          } else {
+            handleOpenMaterial(null);
+          }
+        }}
+        compareMode={compareMode}
+        onToggleCompareMode={handleToggleCompareMode}
+        onToggleDataSourcesPage={() => {
+          setActivePage((p) => (p === 'sources' ? 'map' : 'sources'));
+        }}
+        visualStyle={visualStyle}
+        colorTheme={colorTheme}
+        onToggleColorTheme={() => setColorTheme((t) => (t === 'dark' ? 'light' : 'dark'))}
       />
 
-      {/* Main Satellite Map Stage (Leaflet + OpenStreetMap & Esri World Imagery) */}
-      <main className="relative flex-1 w-full overflow-hidden">
+      {/* Persistent Map Stage (Kept mounted so tiles & zoom state NEVER vanish when switching pages) */}
+      <main
+        aria-hidden={!isMapVisible}
+        className={`absolute inset-0 w-full h-full transition-opacity duration-200 ${
+          isMapVisible ? 'opacity-100 pointer-events-auto z-0' : 'opacity-0 pointer-events-none z-0'
+        }`}
+      >
         <LeafletMap
           sites={visibleSites}
           selectedSiteId={selectedSite?.id ?? null}
+          compareMode={compareMode}
+          compareSiteIds={compareSitesList.map((s) => s.id)}
+          visualStyle={visualStyle}
+          colorTheme={colorTheme}
+          isVisible={isMapVisible}
           command={globeCommand}
           onSelectSite={handleSelectPin}
           onTelemetryChange={setTelemetry}
         />
 
-        {/* Left Side Detail / Catalog Overlay */}
-        <div className="pointer-events-none absolute top-[96px] left-4 z-[1040] flex flex-col gap-3">
-          {selectedSite ? (
-            <div className="pointer-events-auto">
-              <SiteAnalysisPanel
-                site={selectedSite}
-                onClose={() => setSelectedSite(null)}
-                onZoomCloser={(site) => flyToSite(site, 6, false)}
-                onOpenDataSources={() => setShowDataSources(true)}
-              />
+        {/* Compare Mode Interactive Map Selection Banner */}
+        {compareMode && isMapVisible && (
+          <div
+            role="status"
+            data-testid="compare-mode-banner"
+            className={`pointer-events-auto absolute top-[94px] left-1/2 -translate-x-1/2 z-[1045] px-4 py-2.5 max-w-[calc(100vw-2rem)] flex flex-wrap items-center gap-3 text-xs ${tokens.panel}`}
+          >
+            <GitCompareArrows className={`w-4 h-4 shrink-0 ${tokens.accentText}`} />
+            <div className="min-w-0">
+              <span className={`font-semibold ${tokens.heading}`}>
+                Mode Bandingkan Lokasi ({compareSitesList.length}/2):{' '}
+              </span>
+              <span className={tokens.bodyText}>
+                {compareSitesList.length === 0
+                  ? 'Klik 2 pin lokasi di peta untuk membandingkan.'
+                  : `Dipilih A: ${compareSitesList[0].name}. Sekarang klik lokasi ke-2 di peta.`}
+              </span>
             </div>
-          ) : showSitesList ? (
-            <div className="pointer-events-auto">
-              <AllSitesDrawer
-                sites={visibleSites}
-                selectedSiteId={null}
-                onSelectSite={(site) => flyToSite(site, 24, true)}
-                onClose={() => setShowSitesList(false)}
-              />
-            </div>
-          ) : null}
-        </div>
-
-        {/* Bottom-Left Data Attribution (Minimap removed per request) */}
-        <div className="pointer-events-none absolute bottom-3 left-3.5 z-[1040] flex items-center">
-          <div className="pointer-events-auto flex items-center gap-2.5 text-[11px] text-[#d2d5da] bg-[#1f2023]/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-            <span className="font-display font-semibold text-white tracking-tight">
-              TerraAnalog
-            </span>
-            <span className="font-mono-tabular text-[#9aa0a6]">100%</span>
-            <button
-              type="button"
-              onClick={() => setShowDataSources(true)}
-              className="underline decoration-white/40 hover:text-white transition-colors"
-            >
-              Atribusi data
-            </button>
-          </div>
-        </div>
-
-        {/* Bottom-Right Top Finding Popup + Zoom Controls & Telemetry */}
-        <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-3">
-          {showTopFindingPopup && (
-            <div className="pointer-events-auto">
-              <TopFindingPopup
-                site={topFinding}
-                onInspect={handleInspectTopFinding}
-                onDismiss={() => setShowTopFindingPopup(false)}
-              />
-            </div>
-          )}
-
-          {/* Zoom Control Cluster (3D & Compass removed per user request) */}
-          <div className="pointer-events-auto flex items-center gap-2">
-            <div className="h-9 rounded-full bg-[#1f2023]/60 backdrop-blur-md border border-white/12 flex items-center overflow-hidden">
+            <div className="flex items-center gap-1.5 ml-auto shrink-0">
+              {compareSitesList.length > 0 && (
+                <button
+                  type="button"
+                  onClick={() => setCompareSitesList([])}
+                  className={`px-2 py-1 rounded text-[11px] ${tokens.secondaryButton}`}
+                >
+                  Reset
+                </button>
+              )}
               <button
                 type="button"
-                onClick={() => issueCommand({ type: 'zoom', zoomFactor: 1.8 })}
-                title="Perkecil tampilan"
-                aria-label="Perkecil zoom peta"
-                data-testid="zoom-out-btn"
-                className="w-9 h-full flex items-center justify-center text-[#e8eaed] hover:bg-white/10 transition-colors"
+                onClick={handleExitCompare}
+                aria-label="Batalkan mode bandingkan"
+                className={`px-2 py-1 rounded text-[11px] inline-flex items-center gap-1 ${tokens.secondaryButton}`}
               >
-                <Minus className="w-4 h-4" />
-              </button>
-              <div className="w-px h-4 bg-white/12" />
-              <button
-                type="button"
-                onClick={() => issueCommand({ type: 'zoom', zoomFactor: 0.55 })}
-                title="Perbesar tampilan"
-                aria-label="Perbesar zoom peta"
-                data-testid="zoom-in-btn"
-                className="w-9 h-full flex items-center justify-center text-[#e8eaed] hover:bg-white/10 transition-colors"
-              >
-                <Plus className="w-4 h-4" />
+                <X className="w-3 h-3" />
+                <span>Batal</span>
               </button>
             </div>
           </div>
+        )}
 
-          {/* Scale Bar + Live Camera Altitude & DMS Coordinates */}
-          <div className="pointer-events-auto flex items-end gap-3 text-[11px] text-[#e8eaed] font-mono-tabular bg-[#1f2023]/60 backdrop-blur-md px-2.5 py-1 rounded-md border border-white/10">
-            <div className="flex flex-col items-end">
-              <span className="text-[10px] text-[#d2d5da] mb-0.5">{scaleBar.label}</span>
-              <div
-                className="h-1.5 border-b border-l border-r border-white/75"
-                style={{ width: `${scaleBar.widthPx}px` }}
-              />
-            </div>
-            <span data-testid="camera-altitude">
-              Kamera: {telemetry.altitudeKm.toLocaleString('id-ID')} km
-            </span>
-            <span data-testid="camera-coords" className="hidden sm:inline">
-              {formatCoordinatesDMS(telemetry.lat, telemetry.lon)}
-            </span>
+        {/* Left Side Detail / Catalog Overlay (Positioned cleanly below floating header) */}
+        {!compareMode && isMapVisible && (
+          <div className="pointer-events-none absolute top-[94px] left-4 z-[1040] flex flex-col gap-3">
+            {selectedSite ? (
+              <div className="pointer-events-auto">
+                <SiteAnalysisPanel
+                  site={selectedSite}
+                  visualStyle={visualStyle}
+                  colorTheme={colorTheme}
+                  onClose={() => setSelectedSite(null)}
+                  onZoomCloser={(site) => flyToSite(site, 6, false)}
+                  onOpenDataSources={() => setActivePage('sources')}
+                  onInspectMaterial={(matId) => handleOpenMaterial(matId)}
+                />
+              </div>
+            ) : showSitesList ? (
+              <div className="pointer-events-auto">
+                <AllSitesDrawer
+                  sites={visibleSites}
+                  selectedSiteId={null}
+                  visualStyle={visualStyle}
+                  colorTheme={colorTheme}
+                  onSelectSite={(site) => flyToSite(site, 24, true)}
+                  onClose={() => setShowSitesList(false)}
+                />
+              </div>
+            ) : null}
           </div>
-        </div>
+        )}
+
+        {/* Bottom-Right Map Zoom Controls & Telemetry */}
+        {isMapVisible && (
+          <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-2.5">
+            {/* Zoom Control Cluster */}
+            <div className="pointer-events-auto flex items-center gap-2">
+              <div className={`h-9 rounded-full flex items-center overflow-hidden ${tokens.panel}`}>
+                <button
+                  type="button"
+                  onClick={() => issueCommand({ type: 'zoom', zoomFactor: 1.8 })}
+                  title="Perkecil tampilan"
+                  aria-label="Perkecil zoom peta"
+                  data-testid="zoom-out-btn"
+                  className={`w-9 h-full flex items-center justify-center transition-colors ${tokens.heading} ${
+                    tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+                  }`}
+                >
+                  <Minus className="w-4 h-4" />
+                </button>
+                <div className={`w-px h-4 border-l ${tokens.divider}`} />
+                <button
+                  type="button"
+                  onClick={() => issueCommand({ type: 'zoom', zoomFactor: 0.55 })}
+                  title="Perbesar tampilan"
+                  aria-label="Perbesar zoom peta"
+                  data-testid="zoom-in-btn"
+                  className={`w-9 h-full flex items-center justify-center transition-colors ${tokens.heading} ${
+                    tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+                  }`}
+                >
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {/* Scale Bar + Live Camera Altitude & DMS Coordinates */}
+            <div className={`pointer-events-auto flex items-end gap-2.5 text-[11px] font-mono-tabular px-2.5 py-1 ${tokens.panel}`}>
+              <div className="hidden sm:flex flex-col items-end">
+                <span className={`text-[10px] mb-0.5 ${tokens.mutedText}`}>{scaleBar.label}</span>
+                <div
+                  className={`h-1.5 border-b border-l border-r ${
+                    tokens.isDark ? 'border-white/75' : 'border-slate-700'
+                  }`}
+                  style={{ width: `${scaleBar.widthPx}px` }}
+                />
+              </div>
+              <span data-testid="camera-altitude" className={tokens.heading}>
+                {telemetry.altitudeKm.toLocaleString('id-ID')} km
+              </span>
+              <span data-testid="camera-coords" className={`hidden sm:inline ${tokens.bodyText}`}>
+                {formatCoordinatesDMS(telemetry.lat, telemetry.lon)}
+              </span>
+            </div>
+          </div>
+        )}
       </main>
 
-      {/* Open Space Agency Data Sources & Methodology Tab Modal */}
-      {showDataSources && <DataSourcesModal onClose={() => setShowDataSources(false)} />}
+      {/* Dedicated Full-Screen Pages (Sharing One Persistent Header, Style Toggle, and Theme Toggle) */}
+      {activePage === 'materials' && (
+        <div className="relative z-[1010] w-full h-full">
+          <MaterialsInfoPage
+            visualStyle={visualStyle}
+            colorTheme={colorTheme}
+            initialMaterialId={focusedMaterialId}
+            onBackToMap={() => {
+              setActivePage('map');
+              setFocusedMaterialId(null);
+            }}
+          />
+        </div>
+      )}
+
+      {activePage === 'compare' && compareSitesList.length === 2 && (
+        <div className="relative z-[1010] w-full h-full">
+          <CompareSitesPage
+            siteA={compareSitesList[0]}
+            siteB={compareSitesList[1]}
+            visualStyle={visualStyle}
+            colorTheme={colorTheme}
+            onRepick={() => {
+              setCompareSitesList([]);
+              setCompareMode(true);
+              setActivePage('map');
+            }}
+            onExitCompare={handleExitCompare}
+            onInspectMaterial={(matId) => handleOpenMaterial(matId)}
+          />
+        </div>
+      )}
+
+      {activePage === 'sources' && (
+        <div className="relative z-[1010] w-full h-full">
+          <DataSourcesPage
+            visualStyle={visualStyle}
+            colorTheme={colorTheme}
+            onBackToMap={() => setActivePage('map')}
+          />
+        </div>
+      )}
+
+      {/* Global Bottom-Left: Style Toggle (Realistis vs Kartun Lo-Fi) + Origami Attribution */}
+      <div className="pointer-events-none fixed bottom-3 left-3.5 z-[1060] flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => setVisualStyle((s) => (s === 'realistic' ? 'cartoon' : 'realistic'))}
+          aria-pressed={visualStyle === 'cartoon'}
+          aria-label={
+            visualStyle === 'realistic'
+              ? 'Ubah gaya tampilan ke Kartun Lo-Fi'
+              : 'Ubah gaya tampilan ke Realistis'
+          }
+          data-testid="style-toggle-btn"
+          className={`pointer-events-auto h-9 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all whitespace-nowrap ${
+            visualStyle === 'cartoon' ? tokens.primaryButton : tokens.panel
+          }`}
+        >
+          {visualStyle === 'cartoon' ? (
+            <>
+              <Palette className="w-3.5 h-3.5 shrink-0" />
+              <span>Kartun Lo-Fi</span>
+            </>
+          ) : (
+            <>
+              <Globe2 className="w-3.5 h-3.5 shrink-0" />
+              <span>Realistis</span>
+            </>
+          )}
+        </button>
+
+        <div className={`pointer-events-auto hidden md:flex items-center gap-2.5 text-[11px] px-3 py-1.5 ${tokens.panel}`}>
+          <span className={`font-display font-bold tracking-tight ${tokens.heading}`}>
+            Origami
+          </span>
+          <button
+            type="button"
+            onClick={() => setActivePage('sources')}
+            className={`underline transition-colors ${tokens.bodyText}`}
+          >
+            Atribusi data
+          </button>
+        </div>
+      </div>
     </div>
   );
 }

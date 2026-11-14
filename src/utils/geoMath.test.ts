@@ -23,6 +23,8 @@ import {
 } from './analogFilter';
 import { ANALOG_SITES } from '../data/analogSites';
 import { DATA_SOURCES } from '../data/dataSources';
+import { AEROSPACE_MATERIALS } from '../data/materials';
+import { recommendTopMaterials, compareSites } from './materialMatcher';
 
 test('latLonToVector3 and vector3ToLatLon round-trip accurately for key coordinates', () => {
   const samples = [
@@ -133,4 +135,64 @@ test('filterDataSources and getSourcesForSite resolve valid citations', () => {
   const marsSources = filterDataSources(DATA_SOURCES, 'Mars');
   assert.ok(marsSources.length >= 3);
   assert.ok(marsSources.every((s) => s.targetBody === 'Mars'));
+});
+
+test('all 14 analog sites have consistent temperature, terrain, and seasonal data', () => {
+  assert.equal(ANALOG_SITES.length, 14);
+  for (const site of ANALOG_SITES) {
+    assert.ok(
+      site.temperatureProfile.minC <= site.temperatureProfile.avgC &&
+        site.temperatureProfile.avgC <= site.temperatureProfile.maxC,
+      `Temperature bounds invalid for ${site.id}`
+    );
+    assert.ok(site.terrainProfile.surfaceType.length > 5);
+    assert.ok(site.terrainProfile.acidityPh > 0 && site.terrainProfile.acidityPh < 14);
+    assert.ok(site.seasonalRecommendation.bestWindow.length > 5);
+    assert.ok(site.seasonalRecommendation.recommendedTests.length >= 1);
+  }
+});
+
+test('recommendTopMaterials strictly returns 5 ranked materials tailored to site hazards', () => {
+  const ijen = ANALOG_SITES.find((s) => s.id === 'kawah-ijen')!;
+  const topIjen = recommendTopMaterials(ijen, AEROSPACE_MATERIALS, 5);
+  assert.equal(topIjen.length, 5);
+  assert.deepEqual(
+    topIjen.map((r) => r.rank),
+    [1, 2, 3, 4, 5]
+  );
+  // Acidic caldera (pH 0.4) must NOT recommend untreated Aluminium 7075 in top 5
+  assert.ok(!topIjen.some((r) => r.material.id === 'al-7075-t6'));
+  // Acid-resistant materials (Hastelloy / SiC / PTFE) must appear in top 5
+  assert.ok(
+    topIjen.some(
+      (r) =>
+        r.material.id === 'hastelloy-c276' ||
+        r.material.id === 'silicon-carbide-ceramic' ||
+        r.material.id === 'orthofabric-ptfe'
+    )
+  );
+
+  const mcmurdo = ANALOG_SITES.find((s) => s.id === 'mcmurdo-dry-valleys')!;
+  const topMcMurdo = recommendTopMaterials(mcmurdo, AEROSPACE_MATERIALS, 5);
+  assert.equal(topMcMurdo.length, 5);
+  assert.ok(
+    topMcMurdo.some(
+      (r) =>
+        r.material.id === 'aerogel-silica-blanket' ||
+        r.material.id === 'kapton-mli-aluminized' ||
+        r.material.id === 'orthofabric-ptfe'
+    )
+  );
+});
+
+test('compareSites computes temperature deltas and shared materials across mission needs', () => {
+  const bromo = ANALOG_SITES.find((s) => s.id === 'gunung-bromo')!;
+  const mcmurdo = ANALOG_SITES.find((s) => s.id === 'mcmurdo-dry-valleys')!;
+  const comparison = compareSites(bromo, mcmurdo, 'Spacesuit & EVA');
+
+  assert.equal(comparison.tempDeltaAvgC, Math.abs(bromo.temperatureProfile.avgC - mcmurdo.temperatureProfile.avgC));
+  assert.ok(comparison.topMaterialsA.length >= 1 && comparison.topMaterialsA.length <= 5);
+  assert.ok(comparison.topMaterialsB.length >= 1 && comparison.topMaterialsB.length <= 5);
+  assert.ok(comparison.sharedMaterials.length >= 1);
+  assert.ok(comparison.summaryVerdict.includes('Spacesuit & EVA'));
 });

@@ -1,5 +1,5 @@
 {
-  "name": "TerraAnalog — NASA Planetary Analog Explorer",
+  "name": "Remix TerraAnalog — NASA Planetary Analog Explorer",
   "description": "Interactive 3D globe mapping terrestrial analog sites on Earth for future Lunar and Martian base and landing site selection using open NASA, ESA, and USGS data.",
   "requestFramePermissions": [],
   "majorCapabilities": [

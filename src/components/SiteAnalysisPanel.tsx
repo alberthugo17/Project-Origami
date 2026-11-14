@@ -1,55 +1,73 @@
-import React from 'react';
+import React, { useMemo } from 'react';
 import {
   AlertTriangle,
+  Calendar,
   Database,
   Layers,
   MapPin,
+  Mountain,
   Navigation,
+  ShieldCheck,
+  Thermometer,
   X,
 } from 'lucide-react';
 import { AnalogSite } from '../data/analogSites';
+import { AEROSPACE_MATERIALS } from '../data/materials';
 import { formatCoordinatesDMS } from '../utils/geoMath';
 import { getSourcesForSite, getTargetBadgeLabel } from '../utils/analogFilter';
+import { recommendTopMaterials } from '../utils/materialMatcher';
+import { ColorTheme, VisualStyle, getThemeTokens } from '../types/theme';
 
 interface SiteAnalysisPanelProps {
   site: AnalogSite;
+  visualStyle: VisualStyle;
+  colorTheme: ColorTheme;
   onClose: () => void;
   onZoomCloser: (site: AnalogSite) => void;
   onOpenDataSources: () => void;
+  onInspectMaterial: (materialId: string) => void;
 }
 
 export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
   site,
+  visualStyle,
+  colorTheme,
   onClose,
   onZoomCloser,
   onOpenDataSources,
+  onInspectMaterial,
 }) => {
   const citations = getSourcesForSite(site);
+  const top5Materials = useMemo(
+    () => recommendTopMaterials(site, AEROSPACE_MATERIALS, 5),
+    [site]
+  );
+  const tokens = getThemeTokens(visualStyle, colorTheme);
 
   return (
     <aside
       aria-label={`Detail analisis analog ${site.name}`}
       data-testid="site-analysis-panel"
-      className="w-[396px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-208px)] flex flex-col rounded-xl bg-[#1f2023]/60 backdrop-blur-md border border-white/12 shadow-2xl overflow-hidden text-[#e8eaed]"
+      className={`w-[412px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
     >
       {/* Header */}
-      <div className="px-5 pt-4 pb-3.5 border-b border-white/10 flex items-start justify-between gap-3">
+      <div className={`px-5 pt-4 pb-3.5 border-b flex items-start justify-between gap-3 ${tokens.divider}`}>
         <div className="min-w-0">
-          <div className="flex items-center gap-2 text-xs text-[#9aa0a6] flex-wrap">
-            <span className="text-[#8ab4f8] font-medium">
+          <div className={`flex items-center gap-2 text-xs flex-wrap ${tokens.mutedText}`}>
+            <span className={`font-semibold ${tokens.accentText}`}>
               {getTargetBadgeLabel(site.targetBody)}
             </span>
             <span aria-hidden="true">·</span>
             <span>{site.biome}</span>
             <span aria-hidden="true">·</span>
-            <span className="font-mono-tabular text-white font-semibold">
+            <span className={`font-mono-tabular font-semibold ${tokens.heading}`}>
               {site.similarityScore.toFixed(1)}% kecocokan
             </span>
           </div>
-          <h2 className="font-display text-lg font-semibold text-white mt-1 leading-snug">
+          <h2 className={`font-display text-lg font-semibold mt-1 leading-snug ${tokens.heading}`}>
             {site.name}
           </h2>
-          <p className="text-xs text-[#9aa0a6] mt-0.5">
+          <p className={`text-xs mt-0.5 ${tokens.mutedText}`}>
             {site.region}, {site.country} · Target: {site.planetaryCounterpart}
           </p>
         </div>
@@ -58,7 +76,9 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           onClick={onClose}
           aria-label="Tutup panel detail analisis"
           data-testid="close-site-panel"
-          className="shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-[#9aa0a6] hover:text-white hover:bg-white/10 transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8ab4f8]"
+          className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${tokens.mutedText} ${
+            tokens.isDark ? 'hover:text-white hover:bg-white/10' : 'hover:text-slate-900 hover:bg-black/5'
+          }`}
         >
           <X className="w-4 h-4" />
         </button>
@@ -66,52 +86,168 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
 
       {/* Scrollable Scientific Content */}
       <div className="flex-1 overflow-y-auto earth-scroll px-5 py-4 space-y-5">
-        {/* Coordinates & Elevation strip */}
-        <div className="grid grid-cols-2 gap-3 pb-4 border-b border-white/10">
+        {/* Coordinates, Elevation & Temperature Strip */}
+        <div className={`grid grid-cols-3 gap-2.5 pb-4 border-b ${tokens.divider}`}>
           <div>
-            <div className="text-[11px] text-[#9aa0a6]">Koordinat Geografis</div>
-            <div className="text-xs font-mono-tabular text-white mt-0.5">
+            <div className={`text-[11px] ${tokens.mutedText}`}>Koordinat</div>
+            <div className={`text-[11px] font-mono-tabular mt-0.5 ${tokens.heading}`}>
               {formatCoordinatesDMS(site.lat, site.lon)}
             </div>
           </div>
           <div>
-            <div className="text-[11px] text-[#9aa0a6]">Elevasi Permukaan</div>
-            <div className="text-xs font-mono-tabular text-white mt-0.5">
+            <div className={`text-[11px] ${tokens.mutedText}`}>Elevasi</div>
+            <div className={`text-xs font-mono-tabular mt-0.5 ${tokens.heading}`}>
               {site.elevationM.toLocaleString('id-ID')} m mdpl
+            </div>
+          </div>
+          <div>
+            <div className={`text-[11px] flex items-center gap-1 ${tokens.mutedText}`}>
+              <Thermometer className="w-3 h-3" />
+              Suhu Rata-Rata
+            </div>
+            <div className={`text-xs font-mono-tabular font-semibold mt-0.5 ${tokens.accentText}`}>
+              {site.temperatureProfile.avgC}°C ({site.temperatureProfile.minC}°..{site.temperatureProfile.maxC}°C)
             </div>
           </div>
         </div>
 
+        {/* Temperature Detail */}
+        <section className={`p-3 space-y-1.5 ${tokens.subCard}`} data-testid="site-temperature-section">
+          <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
+            <Thermometer className="w-3.5 h-3.5" />
+            Profil Temperatur Terdeteksi
+          </h3>
+          <div className={`flex items-center gap-3 text-xs font-mono-tabular ${tokens.heading}`}>
+            <span>Rata-rata: {site.temperatureProfile.avgC}°C</span>
+            <span aria-hidden="true">·</span>
+            <span>Min: {site.temperatureProfile.minC}°C</span>
+            <span aria-hidden="true">·</span>
+            <span>Maks: {site.temperatureProfile.maxC}°C</span>
+          </div>
+          <p className={`text-[11px] leading-relaxed ${tokens.bodyText}`}>
+            {site.temperatureProfile.note}
+          </p>
+        </section>
+
+        {/* Terrain Condition */}
+        <section className={`p-3 space-y-2 ${tokens.subCard}`} data-testid="site-terrain-section">
+          <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
+            <Mountain className="w-3.5 h-3.5" />
+            Kondisi Terrain & Kimia Permukaan
+          </h3>
+          <div className={`text-xs font-medium ${tokens.heading}`}>
+            {site.terrainProfile.surfaceType}
+          </div>
+          <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono-tabular ${tokens.mutedText}`}>
+            <span>Kekasaran: {site.terrainProfile.roughness}</span>
+            <span aria-hidden="true">·</span>
+            <span>Lereng: {site.terrainProfile.slopeRange}</span>
+            <span aria-hidden="true">·</span>
+            <span>pH: {site.terrainProfile.acidityPh}</span>
+          </div>
+          <p className={`text-[11px] leading-relaxed ${tokens.bodyText}`}>
+            {site.terrainProfile.description}
+          </p>
+        </section>
+
+        {/* Seasonal & Climate Mission Window */}
+        <section className={`p-3 space-y-2 ${tokens.subCard}`} data-testid="site-seasonal-section">
+          <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
+            <Calendar className="w-3.5 h-3.5" />
+            Rekomendasi Misi & Musim Terbaik
+          </h3>
+          <div className={`text-xs font-semibold ${tokens.heading}`}>
+            Jendela Optimal: {site.seasonalRecommendation.bestWindow}
+          </div>
+          <p className={`text-[11px] leading-relaxed ${tokens.bodyText}`}>
+            {site.seasonalRecommendation.climateCondition}
+          </p>
+          <ul className={`space-y-1 text-[11px] list-disc pl-4 ${tokens.bodyText}`}>
+            {site.seasonalRecommendation.recommendedTests.map((t, i) => (
+              <li key={i} className="leading-relaxed">
+                {t}
+              </li>
+            ))}
+          </ul>
+          <p className={`text-[11px] ${tokens.mutedText}`}>
+            Hindari: {site.seasonalRecommendation.avoidWindow}
+          </p>
+        </section>
+
+        {/* Top 5 Material Recommendations */}
+        <section className="space-y-2.5" data-testid="site-top5-materials">
+          <div className="flex items-center justify-between gap-2">
+            <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
+              <ShieldCheck className="w-3.5 h-3.5" />
+              Top 5 Rekomendasi Material Misi
+            </h3>
+            <span className={`text-[11px] font-mono-tabular ${tokens.mutedText}`}>
+              Skor suhu, asam & terrain
+            </span>
+          </div>
+          <div className="space-y-2">
+            {top5Materials.map((rec) => (
+              <button
+                key={rec.material.id}
+                type="button"
+                onClick={() => onInspectMaterial(rec.material.id)}
+                className={`w-full text-left p-2.5 transition-colors ${tokens.card} ${
+                  tokens.isDark ? 'hover:bg-white/[0.08]' : 'hover:bg-slate-50'
+                }`}
+              >
+                <div className="flex items-center justify-between gap-2">
+                  <span className={`text-xs font-semibold ${tokens.heading}`}>
+                    #{rec.rank} {rec.material.name}
+                  </span>
+                  <span className={`text-[11px] font-mono-tabular font-semibold shrink-0 ${tokens.accentText}`}>
+                    {rec.score}%
+                  </span>
+                </div>
+                <div className={`text-[11px] mt-0.5 flex flex-wrap items-center gap-x-2 ${tokens.mutedText}`}>
+                  <span>{rec.recommendedRole}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{rec.material.thermalConductivityType}</span>
+                  <span aria-hidden="true">·</span>
+                  <span>{rec.material.weightClass}</span>
+                </div>
+                <p className={`text-[11px] mt-1 leading-snug ${tokens.bodyText}`}>
+                  {rec.fitReason}
+                </p>
+              </button>
+            ))}
+          </div>
+        </section>
+
         {/* Summary & Geological Rationale */}
         <section className="space-y-2">
-          <h3 className="text-xs font-semibold text-[#8ab4f8] flex items-center gap-1.5">
+          <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Layers className="w-3.5 h-3.5" />
             Karakterisasi Geologi & Lingkungan
           </h3>
-          <p className="text-xs text-[#e8eaed] leading-relaxed">{site.summary}</p>
-          <p className="text-xs text-[#bdc1c6] leading-relaxed">{site.geologicalRationale}</p>
+          <p className={`text-xs leading-relaxed ${tokens.heading}`}>{site.summary}</p>
+          <p className={`text-xs leading-relaxed ${tokens.bodyText}`}>{site.geologicalRationale}</p>
         </section>
 
         {/* Comparative Metrics Matrix */}
         <section className="space-y-2.5">
-          <h3 className="text-xs font-semibold text-[#8ab4f8]">
+          <h3 className={`text-xs font-semibold ${tokens.accentText}`}>
             Perbandingan Parameter Bumi vs {site.targetBody}
           </h3>
-          <div className="divide-y divide-white/10 border border-white/10 rounded-lg overflow-hidden bg-black/25">
+          <div className={`divide-y overflow-hidden ${tokens.card} ${tokens.divider}`}>
             {site.comparativeMetrics.map((m) => (
               <div key={m.parameter} className="p-3 space-y-1">
-                <div className="text-xs font-medium text-white">{m.parameter}</div>
+                <div className={`text-xs font-medium ${tokens.heading}`}>{m.parameter}</div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div>
-                    <span className="text-[#9aa0a6] block">Situs Bumi:</span>
-                    <span className="text-[#e8eaed] font-mono-tabular">{m.earthValue}</span>
+                    <span className={`block ${tokens.mutedText}`}>Situs Bumi:</span>
+                    <span className={`font-mono-tabular ${tokens.bodyText}`}>{m.earthValue}</span>
                   </div>
                   <div>
-                    <span className="text-[#9aa0a6] block">Acuan Planet:</span>
-                    <span className="text-[#fde68a] font-mono-tabular">{m.planetaryBenchmark}</span>
+                    <span className={`block ${tokens.mutedText}`}>Acuan Planet:</span>
+                    <span className={`font-mono-tabular font-medium ${tokens.accentText}`}>{m.planetaryBenchmark}</span>
                   </div>
                 </div>
-                <div className="text-[11px] text-[#9aa0a6] pt-0.5">{m.matchNote}</div>
+                <div className={`text-[11px] pt-0.5 ${tokens.mutedText}`}>{m.matchNote}</div>
               </div>
             ))}
           </div>
@@ -119,11 +255,11 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
 
         {/* Mission Testing Applications */}
         <section className="space-y-2">
-          <h3 className="text-xs font-semibold text-[#8ab4f8] flex items-center gap-1.5">
+          <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <MapPin className="w-3.5 h-3.5" />
             Aplikasi Uji Peralatan & Misi
           </h3>
-          <ul className="space-y-1.5 text-xs text-[#d2d5da] list-disc pl-4">
+          <ul className={`space-y-1.5 text-xs list-disc pl-4 ${tokens.bodyText}`}>
             {site.missionApplications.map((app, i) => (
               <li key={i} className="leading-relaxed">
                 {app}
@@ -134,11 +270,11 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
 
         {/* Operational Hazards */}
         <section className="space-y-1.5">
-          <h3 className="text-xs font-semibold text-amber-300 flex items-center gap-1.5">
+          <h3 className="text-xs font-semibold text-amber-500 dark:text-amber-300 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5" />
             Kendala & Batasan Lapangan
           </h3>
-          <ul className="space-y-1 text-xs text-[#bdc1c6] list-disc pl-4">
+          <ul className={`space-y-1 text-xs list-disc pl-4 ${tokens.bodyText}`}>
             {site.hazardsAndConstraints.map((h, i) => (
               <li key={i} className="leading-relaxed">
                 {h}
@@ -148,16 +284,16 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         </section>
 
         {/* Specific Datasets Used */}
-        <section className="space-y-2 pt-2 border-t border-white/10">
+        <section className={`space-y-2 pt-2 border-t ${tokens.divider}`}>
           <div className="flex items-center justify-between">
-            <h3 className="text-xs font-semibold text-[#e8eaed] flex items-center gap-1.5">
-              <Database className="w-3.5 h-3.5 text-[#8ab4f8]" />
+            <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.heading}`}>
+              <Database className={`w-3.5 h-3.5 ${tokens.accentText}`} />
               Sumber Data Analisis ({citations.length})
             </h3>
             <button
               type="button"
               onClick={onOpenDataSources}
-              className="text-[11px] text-[#8ab4f8] hover:underline whitespace-nowrap"
+              className={`text-[11px] hover:underline whitespace-nowrap ${tokens.accentText}`}
             >
               Lihat semua sumber
             </button>
@@ -166,12 +302,12 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
             {citations.map((src) => (
               <div
                 key={src.id}
-                className="text-[11px] text-[#bdc1c6] py-1.5 px-2.5 rounded bg-white/[0.04] border border-white/5"
+                className={`text-[11px] py-1.5 px-2.5 ${tokens.subCard} ${tokens.bodyText}`}
               >
-                <span className="font-medium text-white">{src.agency}</span>
+                <span className={`font-medium ${tokens.heading}`}>{src.agency}</span>
                 <span aria-hidden="true"> · </span>
                 <span>{src.missionOrPlatform}</span>
-                <div className="text-[10px] text-[#9aa0a6] font-mono-tabular mt-0.5">
+                <div className={`text-[10px] font-mono-tabular mt-0.5 ${tokens.mutedText}`}>
                   {src.instrument} ({src.resolution})
                 </div>
               </div>
@@ -181,11 +317,11 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
       </div>
 
       {/* Footer Actions */}
-      <div className="px-5 py-3 border-t border-white/10 bg-black/20 flex items-center gap-2">
+      <div className={`px-5 py-3 border-t flex items-center gap-2 ${tokens.divider}`}>
         <button
           type="button"
           onClick={() => onZoomCloser(site)}
-          className="flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg bg-[#8ab4f8] hover:bg-[#aecbfa] text-[#171717] text-xs font-semibold transition-colors whitespace-nowrap"
+          className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs transition-colors whitespace-nowrap ${tokens.primaryButton}`}
         >
           <Navigation className="w-3.5 h-3.5" />
           Zoom Dekat
@@ -193,7 +329,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <button
           type="button"
           onClick={onClose}
-          className="px-3.5 py-2 rounded-lg border border-white/15 text-xs text-[#e8eaed] hover:bg-white/10 transition-colors whitespace-nowrap"
+          className={`px-3.5 py-2 rounded-lg text-xs transition-colors whitespace-nowrap ${tokens.secondaryButton}`}
         >
           Tutup
         </button>

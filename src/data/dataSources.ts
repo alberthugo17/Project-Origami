@@ -159,15 +159,15 @@ export const DATA_SOURCES: DataSourceItem[] = [
   },
   {
     id: 'leaflet-openstreetmap-esri',
-    agency: 'OpenStreetMap & Esri World Imagery',
-    missionOrPlatform: 'Leaflet Open-Source Cartography & High-Resolution Satellite Basemap',
-    instrument: 'OpenStreetMap Global Tile Server & Esri High-Resolution Orbital Mosaic',
+    agency: 'Esri & OpenStreetMap Contributors',
+    missionOrPlatform: 'World Imagery & World Boundaries Reference',
+    instrument: 'High-Resolution Orbital & Aerial Mosaic via Leaflet',
     targetBody: 'Bumi',
-    resolution: 'Sub-meter hingga 15 m (Global Satellite & Vector Mosaic)',
-    variablesExtracted: 'Citra satelit global terbuka, batas wilayah dan label administratif dunia, topografi geomorfologi bebas kuota',
+    resolution: 'Sub-meter hingga 15 m (Global Mosaic)',
+    variablesExtracted: 'Citra satelit global terkalibrasi, batas negara, nama kota, dan topografi permukaan Bumi',
     roleInAnalysis:
-      'Menyediakan platform pemetaan satelit terbuka, bebas kuota, dan interaktif untuk navigasi dan inspeksi lokasi analog terestrial secara presisi tanpa API key berbayar.',
-    datasetIdentifier: 'OSM-ESRI-SATELLITE-TILES',
-    accessUrl: 'https://www.openstreetmap.org/',
+      'Menyediakan peta dasar satelit interaktif resolusi tinggi serta konteks wilayah administratif untuk penempatan pin analog dan navigasi kaldera.',
+    datasetIdentifier: 'ESRI-WORLD-IMAGERY / BOUNDARIES',
+    accessUrl: 'https://www.arcgis.com/home/item.html?id=10df2279f9684e4a9f6a7f08febac2a9',
   },
 ];
