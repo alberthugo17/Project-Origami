@@ -1,0 +1,447 @@
+import React, { useMemo, useRef, useState } from 'react';
+import {
+  ChevronLeft,
+  ChevronRight,
+  Compass,
+  Database,
+  Globe,
+  Layers,
+  List,
+  Menu,
+  Search,
+  X,
+} from 'lucide-react';
+import { AnalogSite } from '../data/analogSites';
+import { TargetFilter, filterAnalogSites } from '../utils/analogFilter';
+
+interface TopBarProps {
+  allSites: AnalogSite[];
+  targetFilter: TargetFilter;
+  onTargetFilterChange: (filter: TargetFilter) => void;
+  showLabels: boolean;
+  onToggleLabels: () => void;
+  isTilted3D: boolean;
+  onToggleTilt: () => void;
+  canGoBack: boolean;
+  canGoForward: boolean;
+  onGoBack: () => void;
+  onGoForward: () => void;
+  onResetGlobe: () => void;
+  onSelectSite: (site: AnalogSite) => void;
+  showSitesList: boolean;
+  onToggleSitesList: () => void;
+  showDataSources: boolean;
+  onOpenDataSources: () => void;
+}
+
+export const TopBar: React.FC<TopBarProps> = ({
+  allSites,
+  targetFilter,
+  onTargetFilterChange,
+  showLabels,
+  onToggleLabels,
+  isTilted3D,
+  onToggleTilt,
+  canGoBack,
+  canGoForward,
+  onGoBack,
+  onGoForward,
+  onResetGlobe,
+  onSelectSite,
+  showSitesList,
+  onToggleSitesList,
+  showDataSources,
+  onOpenDataSources,
+}) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchFocused, setSearchFocused] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  const searchResults = useMemo(() => {
+    if (!searchQuery.trim() && !searchFocused) return [];
+    return filterAnalogSites(allSites, { query: searchQuery, targetFilter: 'All' }).slice(0, 7);
+  }, [allSites, searchQuery, searchFocused]);
+
+  return (
+    <header className="absolute top-0 left-0 right-0 z-30 w-full bg-[#1f2023]/60 backdrop-blur-md border-b border-white/10 text-[#e8eaed]">
+      {/* Row 1: Google Earth Top Menu Strip */}
+      <div className="h-9 px-3.5 flex items-center justify-between gap-6 border-b border-white/[0.06]">
+        <div className="flex items-center gap-5 min-w-0">
+          {/* Brand Logo */}
+          <button
+            type="button"
+            onClick={onResetGlobe}
+            className="flex items-center gap-2.5 shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8ab4f8] rounded"
+          >
+            <svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true">
+              <defs>
+                <linearGradient id="earthOrb" x1="0" y1="0" x2="1" y2="1">
+                  <stop offset="0%" stopColor="#8ab4f8" />
+                  <stop offset="55%" stopColor="#1a73e8" />
+                  <stop offset="100%" stopColor="#0d3b8c" />
+                </linearGradient>
+              </defs>
+              <circle cx="12" cy="12" r="10.5" fill="url(#earthOrb)" />
+              <path
+                d="M3.5 9.5c2.8-1.4 6.2-1 8.8.8 2.7 1.8 6.4 1.6 8.5-.3M4.5 15.2c2.9 1 6.7.3 9.2-1.4 2.1-1.4 4.8-1.5 6.8-.5"
+                stroke="#d2e3fc"
+                strokeWidth="1.3"
+                fill="none"
+                strokeLinecap="round"
+              />
+            </svg>
+            <span className="font-display text-sm font-semibold tracking-tight text-white whitespace-nowrap">
+              project Origami
+            </span>
+          </button>
+
+          {/* Clean single-line navigation links */}
+          <nav aria-label="Menu utama" className="hidden sm:flex items-center gap-1 text-xs">
+            <button
+              type="button"
+              onClick={onResetGlobe}
+              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
+            >
+              Tampilan Global
+            </button>
+            <button
+              type="button"
+              onClick={onToggleSitesList}
+              aria-expanded={showSitesList}
+              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap shrink-0 ${
+                showSitesList
+                  ? 'bg-white/15 text-white'
+                  : 'text-[#d2d5da] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Situs Analog
+            </button>
+            <button
+              type="button"
+              onClick={onToggleLabels}
+              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
+            >
+              {showLabels ? 'Mode Satelit Murni' : 'Mode Hibrida Label'}
+            </button>
+            <button
+              type="button"
+              onClick={onToggleTilt}
+              className="px-2.5 py-1 rounded hover:bg-white/10 text-[#d2d5da] hover:text-white transition-colors whitespace-nowrap shrink-0"
+            >
+              {isTilted3D ? 'Tampilan Nadir 2D' : 'Perspektif Medan 3D'}
+            </button>
+            <button
+              type="button"
+              onClick={onOpenDataSources}
+              data-testid="nav-data-sources"
+              className={`px-2.5 py-1 rounded transition-colors whitespace-nowrap shrink-0 ${
+                showDataSources
+                  ? 'bg-[#8ab4f8]/20 text-[#8ab4f8]'
+                  : 'text-[#d2d5da] hover:text-white hover:bg-white/10'
+              }`}
+            >
+              Sumber Data
+            </button>
+          </nav>
+        </div>
+
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="hidden md:inline text-[11px] text-[#9aa0a6] whitespace-nowrap">
+            NASA Earth · Moon · Mars Analog Atlas
+          </span>
+
+          {/* Mobile Menu Dropdown Toggle Button */}
+          <button
+            type="button"
+            onClick={() => setMobileMenuOpen((prev) => !prev)}
+            aria-expanded={mobileMenuOpen}
+            aria-label="Buka menu navigasi"
+            data-testid="mobile-menu-btn"
+            className="sm:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium bg-[#1f2023]/60 hover:bg-white/10 border border-white/10 text-white transition-colors"
+          >
+            {mobileMenuOpen ? <X className="w-3.5 h-3.5" /> : <Menu className="w-3.5 h-3.5" />}
+            <span className="text-[11px]">Menu</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Mobile Navigation Dropdown Menu */}
+      {mobileMenuOpen && (
+        <div
+          role="menu"
+          aria-label="Menu navigasi mobile"
+          data-testid="mobile-dropdown-menu"
+          className="sm:hidden border-b border-white/10 bg-[#1f2023]/95 backdrop-blur-md px-3.5 py-3 space-y-2.5 text-xs shadow-2xl"
+        >
+          <div className="text-[10px] uppercase tracking-wider text-[#9aa0a6] font-semibold px-1">
+            Navigasi & Tampilan Globe
+          </div>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onResetGlobe();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
+            >
+              <Globe className="w-3.5 h-3.5 text-[#8ab4f8]" />
+              <span>Tampilan Global</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onToggleSitesList();
+                setMobileMenuOpen(false);
+              }}
+              className={`flex items-center gap-2 px-2.5 py-2 rounded-lg text-left ${
+                showSitesList ? 'bg-[#8ab4f8]/20 text-[#8ab4f8]' : 'bg-white/5 hover:bg-white/10 text-[#e8eaed]'
+              }`}
+            >
+              <List className="w-3.5 h-3.5 text-[#8ab4f8]" />
+              <span>Katalog Situs</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onToggleLabels();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
+            >
+              <Layers className="w-3.5 h-3.5 text-[#8ab4f8]" />
+              <span>{showLabels ? 'Satelit Murni' : 'Label Hibrida'}</span>
+            </button>
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onToggleTilt();
+                setMobileMenuOpen(false);
+              }}
+              className="flex items-center gap-2 px-2.5 py-2 rounded-lg bg-white/5 hover:bg-white/10 text-left text-[#e8eaed]"
+            >
+              <Compass className="w-3.5 h-3.5 text-[#8ab4f8]" />
+              <span>{isTilted3D ? 'Tampilan 2D' : 'Perspektif 3D'}</span>
+            </button>
+          </div>
+
+          <div className="pt-2 border-t border-white/10">
+            <button
+              type="button"
+              role="menuitem"
+              onClick={() => {
+                onOpenDataSources();
+                setMobileMenuOpen(false);
+              }}
+              className={`w-full flex items-center justify-between px-3 py-2 rounded-lg text-left font-medium ${
+                showDataSources
+                  ? 'bg-[#8ab4f8] text-[#171717]'
+                  : 'bg-white/10 hover:bg-white/15 border border-white/10 text-[#e8eaed]'
+              }`}
+            >
+              <div className="flex items-center gap-2">
+                <Database className="w-3.5 h-3.5 text-[#8ab4f8]" />
+                <span>Sumber Data & Metodologi</span>
+              </div>
+              <span className="text-[10px] text-[#9aa0a6]">12 Dataset</span>
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Row 2: Google Earth Floating-Style Search & Toolbar Strip */}
+      <div className="px-3.5 py-1.5 flex items-center justify-between gap-2.5 bg-black/15">
+        <div className="flex items-center gap-2 flex-1 min-w-0">
+          {/* Search Input Pill */}
+          <div className="relative flex-1 sm:flex-initial sm:w-72 min-w-0">
+            <Search className="w-4 h-4 text-[#9aa0a6] absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              ref={inputRef}
+              type="text"
+              value={searchQuery}
+              onFocus={() => setSearchFocused(true)}
+              onBlur={() => setTimeout(() => setSearchFocused(false), 180)}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && searchResults.length > 0) {
+                  onSelectSite(searchResults[0]);
+                  setSearchQuery(searchResults[0].name);
+                  setSearchFocused(false);
+                  inputRef.current?.blur();
+                }
+              }}
+              placeholder="Telusuri situs analog..."
+              aria-label="Telusuri situs analog"
+              data-testid="search-analog-input"
+              className="w-full h-8 pl-9 pr-7 rounded-full bg-black/25 backdrop-blur-sm border border-white/10 text-xs text-white placeholder-[#9aa0a6] focus:outline-none focus:border-[#8ab4f8]"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                aria-label="Hapus pencarian"
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9aa0a6] hover:text-white"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+              {/* Search Dropdown */}
+              {searchFocused && searchResults.length > 0 && (
+                <div
+                  role="listbox"
+                  aria-label="Hasil pencarian situs analog"
+                  className="absolute left-0 top-9 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] rounded-xl bg-[#1f2023]/90 backdrop-blur-md border border-white/15 shadow-2xl py-1.5 z-50"
+                >
+                {searchResults.map((site) => (
+                  <button
+                    key={site.id}
+                    type="button"
+                    role="option"
+                    aria-selected={false}
+                    onMouseDown={(e) => {
+                      e.preventDefault();
+                      onSelectSite(site);
+                      setSearchQuery(site.name);
+                      setSearchFocused(false);
+                    }}
+                    className="w-full text-left px-3.5 py-2 hover:bg-white/10 flex items-center justify-between gap-2 transition-colors"
+                  >
+                    <div className="min-w-0">
+                      <div className="text-xs font-medium text-white truncate">
+                        {site.name}
+                      </div>
+                      <div className="text-[11px] text-[#9aa0a6] truncate">
+                        {site.country} · {site.targetBody} · {site.biome}
+                      </div>
+                    </div>
+                    <span className="text-[11px] font-mono-tabular text-amber-300 shrink-0">
+                      {site.similarityScore.toFixed(1)}%
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Back / Forward Navigation */}
+          <div className="hidden sm:flex items-center gap-0.5 pl-1 pr-2 border-r border-white/10">
+            <button
+              type="button"
+              onClick={onGoBack}
+              disabled={!canGoBack}
+              title="Lokasi sebelumnya"
+              aria-label="Lokasi sebelumnya"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[#d2d5da] hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            >
+              <ChevronLeft className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onGoForward}
+              disabled={!canGoForward}
+              title="Lokasi berikutnya"
+              aria-label="Lokasi berikutnya"
+              className="w-7 h-7 rounded-full flex items-center justify-center text-[#d2d5da] hover:bg-white/10 disabled:opacity-30 disabled:pointer-events-none transition-colors"
+            >
+              <ChevronRight className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Target Celestial Body Filter */}
+          <div
+            className="flex items-center gap-0.5 p-0.5 rounded-lg bg-black/25 backdrop-blur-sm border border-white/10"
+            role="group"
+            aria-label="Filter target planet"
+          >
+            {(['All', 'Moon', 'Mars'] as TargetFilter[]).map((f) => {
+              const active = targetFilter === f;
+              const label = f === 'All' ? 'Semua' : f === 'Moon' ? 'Bulan' : 'Mars';
+              return (
+                <button
+                  key={f}
+                  type="button"
+                  onClick={() => onTargetFilterChange(f)}
+                  data-testid={`filter-${f.toLowerCase()}`}
+                  className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${
+                    active
+                      ? 'bg-[#8ab4f8] text-[#171717]'
+                      : 'text-[#bdc1c6] hover:text-white hover:bg-white/5'
+                  }`}
+                >
+                  {label}
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Toolbar Icon Buttons (All Wired) */}
+          <div className="hidden md:flex items-center gap-1 pl-1 border-l border-white/10">
+            <button
+              type="button"
+              onClick={onToggleSitesList}
+              title="Daftar semua situs analog"
+              aria-label="Buka daftar situs analog"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                showSitesList ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <List className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onToggleLabels}
+              title={showLabels ? 'Ganti ke citra satelit murni' : 'Tampilkan label wilayah hibrida'}
+              aria-label="Toggle lapisan label peta"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                showLabels ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Layers className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onToggleTilt}
+              title="Toggle perspektif miring 3D"
+              aria-label="Toggle perspektif miring 3D"
+              className={`w-8 h-8 rounded-full flex items-center justify-center transition-colors ${
+                isTilted3D ? 'bg-white/15 text-[#8ab4f8]' : 'text-[#bdc1c6] hover:bg-white/10 hover:text-white'
+              }`}
+            >
+              <Compass className="w-4 h-4" />
+            </button>
+            <button
+              type="button"
+              onClick={onResetGlobe}
+              title="Reset Tampilan Global"
+              aria-label="Reset tampilan ke seluruh Bumi"
+              className="w-8 h-8 rounded-full flex items-center justify-center text-[#bdc1c6] hover:bg-white/10 hover:text-white transition-colors"
+            >
+              <Globe className="w-4 h-4" />
+            </button>
+          </div>
+        </div>
+
+        {/* Right Primary Action Tab: Sumber Data (hidden on mobile since in dropdown) */}
+        <button
+          type="button"
+          onClick={onOpenDataSources}
+          data-testid="toolbar-data-sources-btn"
+          className={`hidden sm:inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-colors whitespace-nowrap shrink-0 border ${
+            showDataSources
+              ? 'bg-[#8ab4f8] text-[#171717] border-[#8ab4f8]'
+              : 'bg-[#1f2023]/60 hover:bg-white/15 backdrop-blur-sm text-[#e8eaed] border-white/12'
+          }`}
+        >
+          <Database className="w-3.5 h-3.5" />
+          <span>Sumber Data</span>
+        </button>
+      </div>
+    </header>
+  );
+};
