@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  ChevronDown,
   Flame,
   Layers,
   Search,
@@ -39,6 +40,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
   const [category, setCategory] = useState<'Semua' | MaterialCategory>('Semua');
   const [query, setQuery] = useState('');
   const [selectedSiteId, setSelectedSiteId] = useState<string>(ANALOG_SITES[0].id);
+  const [isSitePopupOpen, setIsSitePopupOpen] = useState(false);
 
   const tokens = getThemeTokens(visualStyle, colorTheme);
 
@@ -133,21 +135,58 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
-            <label className="flex items-center gap-2 text-xs">
-              <span className={`whitespace-nowrap ${tokens.mutedText}`}>Simulasi Lokasi:</span>
-              <select
-                value={selectedSiteId}
-                onChange={(e) => setSelectedSiteId(e.target.value)}
-                aria-label="Pilih lokasi untuk simulasi kecocokan material"
-                className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none max-w-[200px] sm:max-w-[240px] truncate ${tokens.input}`}
-              >
-                {ANALOG_SITES.map((s) => (
-                  <option key={s.id} value={s.id}>
-                    {s.name.split('(')[0].trim()}
-                  </option>
-                ))}
-              </select>
-            </label>
+            <div className="relative">
+              <div className="flex items-center gap-2 text-xs">
+                <span className={`whitespace-nowrap ${tokens.mutedText}`}>Simulasi Lokasi:</span>
+                <button
+                  type="button"
+                  onClick={() => setIsSitePopupOpen(!isSitePopupOpen)}
+                  aria-expanded={isSitePopupOpen}
+                  aria-haspopup="listbox"
+                  className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none flex items-center justify-between gap-2 max-w-[200px] sm:max-w-[240px] truncate ${tokens.input}`}
+                >
+                  <span className="truncate">{activeSite.name.split('(')[0].trim()}</span>
+                  <ChevronDown className="w-3.5 h-3.5 shrink-0 opacity-70" />
+                </button>
+              </div>
+
+              {isSitePopupOpen && (
+                <>
+                  <div
+                    className="fixed inset-0 z-40"
+                    onClick={() => setIsSitePopupOpen(false)}
+                  />
+                  <div className={`absolute right-0 mt-1.5 w-72 max-h-72 overflow-y-auto earth-scroll rounded-xl shadow-2xl z-50 p-1.5 border backdrop-blur-xl ${tokens.panel}`}>
+                    <div className="px-2 py-1.5 text-[11px] font-semibold opacity-70 border-b mb-1">
+                      Pilih Lokasi Simulasi ({ANALOG_SITES.length})
+                    </div>
+                    {ANALOG_SITES.map((s) => {
+                      const isSelected = s.id === selectedSiteId;
+                      return (
+                        <button
+                          key={s.id}
+                          type="button"
+                          onClick={() => {
+                            setSelectedSiteId(s.id);
+                            setIsSitePopupOpen(false);
+                          }}
+                          className={`w-full text-left px-2.5 py-2 rounded-lg text-xs transition-colors flex items-center justify-between gap-2 ${
+                            isSelected
+                              ? tokens.isDark ? 'bg-white/20 text-white font-bold' : 'bg-blue-100 text-blue-900 font-bold'
+                              : tokens.isDark ? 'hover:bg-white/10 text-slate-200' : 'hover:bg-black/5 text-slate-800'
+                          }`}
+                        >
+                          <span className="truncate">{s.name.split('(')[0].trim()}</span>
+                          <span className="text-[10px] font-mono-tabular opacity-70 shrink-0">
+                            {s.similarityScore.toFixed(1)}%
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </div>
+                </>
+              )}
+            </div>
 
             <div className="relative flex-1 sm:w-60">
               <Search className={`w-3.5 h-3.5 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none ${tokens.mutedText}`} />
