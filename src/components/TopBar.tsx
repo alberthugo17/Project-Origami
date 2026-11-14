@@ -110,7 +110,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               }}
             />
             <span className={`font-display text-sm font-extrabold tracking-tight whitespace-nowrap ${tokens.heading}`}>
-              Origami
+              Project Origami
             </span>
           </button>
 
