@@ -74,7 +74,3 @@ export const CartoonPageStickers: React.FC<StickerProps & { badgeText: string }>
     </div>
   );
 };
-
-export const CartoonCornerStamp: React.FC<StickerProps> = () => {
-  return null;
-};

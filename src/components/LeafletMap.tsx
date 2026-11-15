@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import { ANALOG_SITES, AnalogSite } from '../data/analogSites';
 import { WORLD_LANDMASSES, LandMass } from '../data/worldCoastlines';
 import { ColorTheme, VisualStyle } from '../types/theme';
+import { TargetFilter, getEffectiveSimilarityScore } from '../utils/analogFilter';
 import {
   altitudeKmToZoom,
   clamp,
@@ -27,6 +28,8 @@ export interface GlobeCommand {
 
 interface LeafletMapProps {
   sites: AnalogSite[];
+  targetFilter?: TargetFilter;
+  topSiteId?: string | null;
   selectedSiteId: string | null;
   compareMode: boolean;
   compareSiteIds: string[];
@@ -118,19 +121,22 @@ function createPinHtml(
   isSelected: boolean,
   compareIndex: number,
   visualStyle: VisualStyle,
-  colorTheme: ColorTheme
+  colorTheme: ColorTheme,
+  isTop: boolean
 ): { width: number; height: number; html: string } {
-  const isTop = Boolean(site.isTopFinding);
   const isCartoon = visualStyle === 'cartoon';
   const isDark = colorTheme === 'dark';
   const isCompared = compareIndex >= 0;
   const compareBadge = compareIndex === 0 ? 'A' : compareIndex === 1 ? 'B' : '';
-  const shortName =
-    site.id === 'gunung-bromo' ? 'Gunung Bromo (Top)' : site.name.split('(')[0].trim();
+  const baseName = site.name.split('(')[0].trim();
+  const shortName = isTop ? `${baseName} (Top)` : baseName;
   const label = isCompared ? `[${compareBadge}] ${shortName}` : shortName;
 
-  // Offset Kawah Ijen label below its pin so it never collides behind Gunung Bromo at global zoom
-  const labelBelow = site.id === 'kawah-ijen' && !isSelected && !isCompared;
+  // Offset Kawah Ijen and Kazumura labels below their pins so neighboring pins never collide at global zoom
+  const labelBelow =
+    (site.id === 'kawah-ijen' || site.id === 'kazumura-lava-tubes') &&
+    !isSelected &&
+    !isCompared;
 
   let badgeStyle = '';
   if (isCartoon) {
@@ -181,12 +187,13 @@ function createPinHtml(
     }
   }
 
+  const isDualTarget = site.targetBody === 'Moon & Mars';
   const pinColor =
     site.targetBody === 'Mars'
       ? '#ef4444'
       : site.targetBody === 'Moon'
         ? '#3b82f6'
-        : '#f97316';
+        : '#8b5cf6';
   const scale = isCompared ? 1.32 : isSelected ? 1.25 : isCartoon ? 1.14 : isTop ? 1.15 : 0.95;
   const strokeColor = isCartoon ? (isDark ? '#818cf8' : '#0e1a18') : '#0f172a';
   const strokeWidth = isCartoon ? '2.3' : '1.5';
@@ -200,9 +207,15 @@ function createPinHtml(
     </span>
   `;
 
+  const pinBodySvg = isDualTarget
+    ? `<path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 22 12 22V0z" fill="#3b82f6" />
+       <path d="M12 0v34s12-13 12-22C24 5.37 18.63 0 12 0z" fill="#ef4444" />
+       <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 22 12 22s12-13 12-22c0-6.63-5.37-12-12-12z" fill="none" stroke="${strokeColor}" stroke-width="${strokeWidth}" />`
+    : `<path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 22 12 22s12-13 12-22c0-6.63-5.37-12-12-12z" fill="${pinColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}" />`;
+
   const svgEl = `
     <svg width="${pinW}" height="${pinH}" viewBox="0 0 24 34" fill="none" style="display:block;filter:${isCartoon ? (isDark ? 'drop-shadow(0 3px 6px rgba(10,8,30,0.6))' : 'drop-shadow(2px 2px 0px #0e1a18)') : 'none'};">
-      <path d="M12 0C5.37 0 0 5.37 0 12c0 9 12 22 12 22s12-13 12-22c0-6.63-5.37-12-12-12z" fill="${pinColor}" stroke="${strokeColor}" stroke-width="${strokeWidth}" />
+      ${pinBodySvg}
       ${
         isCartoon
           ? `<circle cx="9.2" cy="10" r="1.45" fill="${isDark ? '#ffffff' : '#0e1a18'}" />
@@ -227,6 +240,8 @@ function createPinHtml(
 
 export const LeafletMap: React.FC<LeafletMapProps> = ({
   sites,
+  targetFilter = 'All',
+  topSiteId = null,
   selectedSiteId,
   compareMode,
   compareSiteIds,
@@ -463,9 +478,16 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
     sites.forEach((site) => {
       const isSelected = site.id === selectedSiteId;
       const compareIndex = compareMode ? compareSiteIds.indexOf(site.id) : -1;
-      const isTop = Boolean(site.isTopFinding);
+      const isTop = topSiteId ? site.id === topSiteId : Boolean(site.isTopFinding);
+      const effectiveScore = getEffectiveSimilarityScore(site, targetFilter);
+      const scopeLabel =
+        targetFilter === 'Moon'
+          ? 'Bulan'
+          : targetFilter === 'Mars'
+            ? 'Mars'
+            : site.targetBody;
 
-      const pin = createPinHtml(site, isSelected, compareIndex, visualStyle, colorTheme);
+      const pin = createPinHtml(site, isSelected, compareIndex, visualStyle, colorTheme, isTop);
       const customIcon = L.divIcon({
         className: 'analog-site-marker',
         html: pin.html,
@@ -482,8 +504,8 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
               ? 1000
               : isTop
                 ? 900
-                : Math.round(site.similarityScore),
-        title: `${site.name} (${site.targetBody}, ${site.similarityScore}%)`,
+                : Math.round(effectiveScore),
+        title: `${site.name} (${scopeLabel}, ${effectiveScore.toFixed(1)}%)`,
       });
 
       marker.on('click', () => {
@@ -492,7 +514,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
 
       markersLayer.addLayer(marker);
     });
-  }, [sites, selectedSiteId, compareMode, compareSiteIds, visualStyle, colorTheme, onSelectSite]);
+  }, [sites, targetFilter, topSiteId, selectedSiteId, compareMode, compareSiteIds, visualStyle, colorTheme, onSelectSite]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

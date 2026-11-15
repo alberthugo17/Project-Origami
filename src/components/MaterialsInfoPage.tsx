@@ -1,7 +1,8 @@
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
   ChevronDown,
+  ExternalLink,
   Flame,
   Layers,
   Search,
@@ -12,7 +13,7 @@ import {
 } from 'lucide-react';
 import { ANALOG_SITES } from '../data/analogSites';
 import { AEROSPACE_MATERIALS, MaterialCategory } from '../data/materials';
-import { scoreMaterialForSite } from '../utils/materialMatcher';
+import { getMaterialScoreBand, scoreMaterialForSite } from '../utils/materialMatcher';
 import { ColorTheme, VisualStyle, getThemeTokens } from '../types/theme';
 import { CartoonPageStickers } from './CartoonStickers';
 
@@ -20,6 +21,8 @@ interface MaterialsInfoPageProps {
   visualStyle: VisualStyle;
   colorTheme: ColorTheme;
   initialMaterialId?: string | null;
+  initialSiteId?: string | null;
+  backLabel?: string;
   onBackToMap: () => void;
 }
 
@@ -35,12 +38,35 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
   visualStyle,
   colorTheme,
   initialMaterialId = null,
+  initialSiteId = null,
+  backLabel = 'Kembali ke Peta',
   onBackToMap,
 }) => {
   const [category, setCategory] = useState<'Semua' | MaterialCategory>('Semua');
   const [query, setQuery] = useState('');
-  const [selectedSiteId, setSelectedSiteId] = useState<string>(ANALOG_SITES[0].id);
+  const [selectedSiteId, setSelectedSiteId] = useState<string>(() =>
+    initialSiteId && ANALOG_SITES.some((s) => s.id === initialSiteId)
+      ? initialSiteId
+      : ANALOG_SITES[0].id
+  );
   const [isSitePopupOpen, setIsSitePopupOpen] = useState(false);
+
+  useEffect(() => {
+    if (initialSiteId && ANALOG_SITES.some((s) => s.id === initialSiteId)) {
+      setSelectedSiteId(initialSiteId);
+    }
+  }, [initialSiteId]);
+
+  useEffect(() => {
+    if (!initialMaterialId) return;
+    setCategory('Semua');
+    setQuery('');
+    const timer = window.setTimeout(() => {
+      const el = document.querySelector(`[data-testid="material-card-${initialMaterialId}"]`);
+      el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 100);
+    return () => window.clearTimeout(timer);
+  }, [initialMaterialId]);
 
   const tokens = getThemeTokens(visualStyle, colorTheme);
 
@@ -88,7 +114,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${tokens.secondaryButton}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Kembali ke Peta</span>
+                <span>{backLabel}</span>
               </button>
               <div className={`flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
                 <Layers className="w-4 h-4" />
@@ -100,7 +126,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
               <span className={tokens.highlighter}>Info Material</span> Eksplorasi
             </h1>
             <p className={`text-sm leading-relaxed ${tokens.bodyText}`}>
-              Karakteristik kecenderungan mekanis, daya tahan, berat/densitas, respons pada suhu ekstrem, sifat isolator atau konduktor termal-listrik, serta ketahanan asam yang menentukan Top 5 rekomendasi tiap situs.
+              Evaluasi teknis berbobot berdasarkan rentang suhu, ketahanan benturan (impact), abrasi debu, radiasi UV/oksidator, korosi asam, massa, dan peran paparan (eksterior vs internal) mengacu pada data NASA MAPTIS &amp; NTRS.
             </p>
           </div>
           {tokens.isCartoon && (
@@ -143,6 +169,8 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                   onClick={() => setIsSitePopupOpen(!isSitePopupOpen)}
                   aria-expanded={isSitePopupOpen}
                   aria-haspopup="listbox"
+                  aria-label={`Simulasi lokasi: ${activeSite.name}`}
+                  data-testid="materials-site-selector"
                   className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none flex items-center justify-between gap-2 max-w-[200px] sm:max-w-[240px] truncate ${tokens.input}`}
                 >
                   <span className="truncate">{activeSite.name.split('(')[0].trim()}</span>
@@ -177,9 +205,10 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                           }`}
                         >
                           <span className="truncate">{s.name.split('(')[0].trim()}</span>
-                          <span className="text-[10px] font-mono-tabular opacity-70 shrink-0">
-                            {s.similarityScore.toFixed(1)}%
-                          </span>
+                          <div className="text-[10px] font-mono-tabular opacity-70 shrink-0 flex items-center gap-1.5">
+                            <span>🌙 {s.moonSimilarityScore.toFixed(1)}%</span>
+                            <span>🪐 {s.marsSimilarityScore.toFixed(1)}%</span>
+                          </div>
                         </button>
                       );
                     })}
@@ -211,6 +240,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
           ) : (
             filtered.map((mat) => {
               const fit = scoreMaterialForSite(activeSite, mat);
+              const band = getMaterialScoreBand(fit.score);
               const isHighlighted = initialMaterialId === mat.id;
               return (
                 <article
@@ -228,7 +258,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                   <div className="flex items-start justify-between gap-3">
                     <div>
                       <div className={`text-[11px] font-medium ${tokens.mutedText}`}>
-                        {mat.code} · {mat.category}
+                        {mat.code} · {mat.category} · {mat.exposureRole}
                       </div>
                       <h2 className={`font-display text-base font-bold mt-0.5 ${tokens.heading}`}>
                         {mat.name}
@@ -236,8 +266,11 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                     </div>
                     <div className="text-right shrink-0">
                       <div className={`text-[10px] ${tokens.mutedText}`}>Skor di lokasi ini</div>
-                      <div className={`font-mono-tabular text-base font-bold ${tokens.accentText}`}>
+                      <div className={`font-mono-tabular text-base font-bold ${band.textClass}`}>
                         {fit.score}%
+                      </div>
+                      <div className={`text-[10px] font-semibold ${band.textClass}`}>
+                        {band.label}
                       </div>
                     </div>
                   </div>
@@ -251,6 +284,11 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                         <span className={`font-mono-tabular font-medium ${tokens.heading}`}>
                           {mat.weightClass} ({mat.densityKgM3.toLocaleString('id-ID')} kg/m³)
                         </span>
+                        {mat.densityNote && (
+                          <span className={`block text-[10px] mt-0.5 ${tokens.mutedText}`}>
+                            {mat.densityNote}
+                          </span>
+                        )}
                       </div>
                     </div>
                     <div className="flex items-start gap-1.5">
@@ -296,21 +334,42 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                       <span className={`font-semibold ${tokens.heading}`}>Pengaruh Suhu: </span>
                       <span className={tokens.bodyText}>{mat.thermalBehaviorNote}</span>
                     </div>
-                    <div className="flex items-center gap-1.5 pt-0.5">
+                    <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-0.5">
                       <Shield className={`w-3.5 h-3.5 shrink-0 ${tokens.accentText}`} />
-                      <span className={`font-semibold ${tokens.heading}`}>Ketahanan Asam:</span>
+                      <span className={`font-semibold shrink-0 whitespace-nowrap ${tokens.heading}`}>
+                        Ketahanan Asam:
+                      </span>
                       <span className={tokens.bodyText}>{mat.acidResistanceLabel}</span>
+                    </div>
+                    <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-[11px] font-mono-tabular ${tokens.mutedText}`}>
+                      <span>Impact: {mat.impactResistanceScore}/5</span>
+                      <span aria-hidden="true">·</span>
+                      <span>Abrasi Debu: {mat.dustAbrasionScore}/5</span>
+                      <span aria-hidden="true">·</span>
+                      <span>UV/Oksidator: {mat.uvOxidationScore}/5</span>
                     </div>
                   </div>
 
-                  {/* Applications & Site Fit Verdict */}
-                  <div className={`pt-2 border-t text-[11px] space-y-1 ${tokens.divider}`}>
+                  {/* Applications, Site Fit Verdict & Scientific Reference */}
+                  <div className={`pt-2 border-t text-[11px] space-y-1.5 ${tokens.divider}`}>
                     <div className={tokens.mutedText}>
                       Aplikasi: {mat.primaryApplications.join(' · ')}
+                    </div>
+                    <div className={tokens.mutedText}>
+                      Batasan: {mat.limitations}
                     </div>
                     <div className={`font-medium ${tokens.accentText}`}>
                       Analisis {activeSite.name.split('(')[0].trim()}: {fit.reason}
                     </div>
+                    <a
+                      href={mat.referenceUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className={`inline-flex items-center gap-1 pt-0.5 hover:underline ${tokens.accentText}`}
+                    >
+                      <span>Sumber: {mat.referenceCitation}</span>
+                      <ExternalLink className="w-3 h-3 shrink-0" />
+                    </a>
                   </div>
                 </article>
               );

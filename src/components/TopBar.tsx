@@ -1,8 +1,9 @@
-import React, { useMemo, useRef, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import { AnimatePresence, motion } from 'motion/react';
 import {
   Database,
   GitCompareArrows,
+  Info,
   Layers,
   List,
   Menu,
@@ -55,7 +56,27 @@ export const TopBar: React.FC<TopBarProps> = ({
   const [searchQuery, setSearchQuery] = useState('');
   const [searchFocused, setSearchFocused] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [filterInfoOpen, setFilterInfoOpen] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
+  const filterInfoRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!filterInfoOpen) return;
+    const handleOutside = (e: PointerEvent) => {
+      if (filterInfoRef.current && !filterInfoRef.current.contains(e.target as Node)) {
+        setFilterInfoOpen(false);
+      }
+    };
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setFilterInfoOpen(false);
+    };
+    document.addEventListener('pointerdown', handleOutside);
+    window.addEventListener('keydown', handleEsc);
+    return () => {
+      document.removeEventListener('pointerdown', handleOutside);
+      window.removeEventListener('keydown', handleEsc);
+    };
+  }, [filterInfoOpen]);
 
   const tokens = getThemeTokens(visualStyle, colorTheme);
 
@@ -121,22 +142,24 @@ export const TopBar: React.FC<TopBarProps> = ({
               onClick={onToggleSitesList}
               aria-expanded={activePage === 'map' && showSitesList}
               data-testid="nav-sites-btn"
-              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 ${navButtonClass(
+              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${navButtonClass(
                 activePage === 'map' && showSitesList
               )}`}
             >
-              Situs Analog
+              <List className="w-3.5 h-3.5" />
+              <span>Situs Analog</span>
             </button>
             <button
               type="button"
               onClick={onToggleMaterialsPage}
               aria-current={activePage === 'materials' ? 'page' : undefined}
               data-testid="nav-materials-btn"
-              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 ${navButtonClass(
+              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${navButtonClass(
                 activePage === 'materials'
               )}`}
             >
-              Info Material
+              <Layers className="w-3.5 h-3.5" />
+              <span>Info Material</span>
             </button>
             <button
               type="button"
@@ -155,11 +178,12 @@ export const TopBar: React.FC<TopBarProps> = ({
               onClick={onToggleDataSourcesPage}
               aria-current={activePage === 'sources' ? 'page' : undefined}
               data-testid="nav-data-sources"
-              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 ${navButtonClass(
+              className={`px-2.5 py-1 rounded-md transition-colors whitespace-nowrap shrink-0 inline-flex items-center gap-1.5 ${navButtonClass(
                 activePage === 'sources'
               )}`}
             >
-              Sumber Data
+              <Database className="w-3.5 h-3.5" />
+              <span>Sumber Data</span>
             </button>
           </nav>
         </div>
@@ -210,10 +234,10 @@ export const TopBar: React.FC<TopBarProps> = ({
             aria-label="Menu navigasi mobile"
             data-testid="mobile-dropdown-menu"
             initial={{ opacity: 0, height: 0, y: -8 }}
-            animate={{ opacity: 1, height: 'auto', y: 0 }}
+            animate={{ opacity: 0.7, height: 'auto', y: 0 }}
             exit={{ opacity: 0, height: 0, y: -8 }}
             transition={{ duration: 0.24, ease: [0.16, 1, 0.3, 1] }}
-            className={`sm:hidden overflow-hidden border-b ${tokens.divider} ${tokens.panel}`}
+            className={`sm:hidden overflow-hidden border-b ${tokens.divider} ${tokens.header}`}
           >
             <div className="px-3.5 py-3 space-y-2.5 text-xs">
               <div className={`text-[11px] font-semibold px-0.5 ${tokens.mutedText}`}>
@@ -286,7 +310,7 @@ export const TopBar: React.FC<TopBarProps> = ({
 
       {/* Row 2: Search & Celestial Filter Strip (Only on Map view so full pages feel spacious) */}
       {activePage === 'map' && (
-        <div className={`px-3.5 py-1.5 flex items-center justify-between gap-2.5 ${tokens.headerSubRow}`}>
+        <div className={`px-3.5 py-1.5 flex items-center justify-between gap-2 ${tokens.headerSubRow}`}>
           <div className="flex items-center gap-2 flex-1 min-w-0">
             {/* Search Input */}
             <div className="relative flex-1 sm:flex-initial sm:w-72 min-w-0">
@@ -353,38 +377,76 @@ export const TopBar: React.FC<TopBarProps> = ({
                           {site.country} · {site.targetBody} · {site.temperatureProfile.avgC}°C
                         </div>
                       </div>
-                      <span className={`text-[11px] font-mono-tabular shrink-0 ${tokens.accentText}`}>
-                        {site.similarityScore.toFixed(1)}%
-                      </span>
+                      <div className={`text-[10px] font-mono-tabular shrink-0 flex items-center gap-1.5 ${tokens.accentText}`}>
+                        <span>🌙 {site.moonSimilarityScore.toFixed(1)}%</span>
+                        <span>🪐 {site.marsSimilarityScore.toFixed(1)}%</span>
+                      </div>
                     </button>
                   ))}
                 </div>
               )}
             </div>
 
-            {/* Target Celestial Body Filter */}
-            <div
-              className={`flex items-center gap-0.5 p-0.5 rounded-lg ${tokens.pillGroup}`}
-              role="group"
-              aria-label="Filter target planet"
-            >
-              {(['All', 'Moon', 'Mars'] as TargetFilter[]).map((f) => {
-                const active = targetFilter === f;
-                const label = f === 'All' ? 'Semua' : f === 'Moon' ? 'Bulan' : 'Mars';
-                return (
-                  <button
-                    key={f}
-                    type="button"
-                    onClick={() => onTargetFilterChange(f)}
-                    data-testid={`filter-${f.toLowerCase()}`}
-                    className={`px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${
-                      active ? tokens.pillActive : tokens.pillInactive
-                    }`}
-                  >
-                    {label}
-                  </button>
-                );
-              })}
+            {/* Target Celestial Body Filter + Info Tooltip */}
+            <div ref={filterInfoRef} className="relative flex items-center gap-1.5 shrink-0">
+              <div
+                className={`flex items-center gap-0.5 p-0.5 rounded-lg ${tokens.pillGroup}`}
+                role="group"
+                aria-label="Filter target misi primer"
+              >
+                {(['All', 'Moon', 'Mars'] as TargetFilter[]).map((f) => {
+                  const active = targetFilter === f;
+                  const label = f === 'All' ? 'Semua' : f === 'Moon' ? 'Bulan' : 'Mars';
+                  return (
+                    <button
+                      key={f}
+                      type="button"
+                      onClick={() => onTargetFilterChange(f)}
+                      data-testid={`filter-${f.toLowerCase()}`}
+                      className={`px-2 sm:px-2.5 py-1 rounded-md text-[11px] font-medium transition-colors whitespace-nowrap ${
+                        active ? tokens.pillActive : tokens.pillInactive
+                      }`}
+                    >
+                      {label}
+                    </button>
+                  );
+                })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setFilterInfoOpen((v) => !v)}
+                aria-expanded={filterInfoOpen}
+                aria-label="Penjelasan filter target misi primer"
+                title="Target Misi Primer"
+                data-testid="filter-info-btn"
+                className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors shrink-0 ${
+                  filterInfoOpen ? tokens.accentText : tokens.mutedText
+                } ${tokens.secondaryButton}`}
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+
+              {filterInfoOpen && (
+                <div
+                  role="tooltip"
+                  data-testid="filter-info-tooltip"
+                  className={`absolute top-full right-0 sm:left-0 sm:right-auto mt-2 w-64 sm:w-72 max-w-[calc(100vw-1.75rem)] p-3 text-[11px] leading-relaxed z-[1070] shadow-2xl ${
+                    tokens.isCartoon
+                      ? tokens.panel
+                      : tokens.isDark
+                        ? 'bg-[#121722] border border-white/20 rounded-xl'
+                        : 'bg-white border border-slate-300 rounded-xl'
+                  }`}
+                >
+                  <div className={`font-semibold mb-1 ${tokens.heading}`}>
+                    Filter Target Misi Primer
+                  </div>
+                  <p className={tokens.bodyText}>
+                    Menyaring situs berdasarkan fokus misi resmi NASA/ESA/USGS (Biru: Bulan, Merah: Mars, Belah: Keduanya). Skor persentase kedua planet tetap dihitung penuh sebagai pembanding.
+                  </p>
+                </div>
+              )}
             </div>
           </div>
         </div>

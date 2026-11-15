@@ -1,8 +1,10 @@
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import {
   AlertTriangle,
+  BarChart3,
   Calendar,
   Database,
+  ExternalLink,
   Layers,
   MapPin,
   Mountain,
@@ -14,8 +16,8 @@ import {
 import { AnalogSite } from '../data/analogSites';
 import { AEROSPACE_MATERIALS } from '../data/materials';
 import { formatCoordinatesDMS } from '../utils/geoMath';
-import { getSourcesForSite, getTargetBadgeLabel } from '../utils/analogFilter';
-import { recommendTopMaterials } from '../utils/materialMatcher';
+import { getSourcesForSite } from '../utils/analogFilter';
+import { getMaterialScoreBand, recommendTopMaterials } from '../utils/materialMatcher';
 import { ColorTheme, VisualStyle, getThemeTokens } from '../types/theme';
 
 interface SiteAnalysisPanelProps {
@@ -25,7 +27,7 @@ interface SiteAnalysisPanelProps {
   onClose: () => void;
   onZoomCloser: (site: AnalogSite) => void;
   onOpenDataSources: () => void;
-  onInspectMaterial: (materialId: string) => void;
+  onInspectMaterial: (materialId: string, siteId: string) => void;
 }
 
 export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
@@ -43,26 +45,50 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
     [site]
   );
   const tokens = getThemeTokens(visualStyle, colorTheme);
+  const defaultBreakdownTarget: 'Moon' | 'Mars' =
+    site.targetBody === 'Moon'
+      ? 'Moon'
+      : site.targetBody === 'Mars'
+        ? 'Mars'
+        : site.moonSimilarityScore >= site.marsSimilarityScore
+          ? 'Moon'
+          : 'Mars';
+  const [breakdownTarget, setBreakdownTarget] = useState<'Moon' | 'Mars'>(defaultBreakdownTarget);
+  const activeBreakdownTarget: 'Moon' | 'Mars' =
+    site.targetBody === 'Moon'
+      ? 'Moon'
+      : site.targetBody === 'Mars'
+        ? 'Mars'
+        : breakdownTarget;
 
   return (
     <aside
       aria-label={`Detail analisis analog ${site.name}`}
       data-testid="site-analysis-panel"
-      className={`w-[412px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
+      className={`w-[412px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-225px)] sm:max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
     >
       {/* Header */}
       <div className={`px-5 pt-4 pb-3.5 border-b flex items-start justify-between gap-3 ${tokens.divider}`}>
         <div className="min-w-0">
-          <div className={`flex items-center gap-2 text-xs flex-wrap ${tokens.mutedText}`}>
+          <div className={`flex items-center gap-x-2 gap-y-1 text-xs flex-wrap ${tokens.mutedText}`}>
             <span className={`font-semibold ${tokens.accentText}`}>
-              {getTargetBadgeLabel(site.targetBody)}
+              Target Primer:{' '}
+              {site.targetBody === 'Moon'
+                ? 'Bulan'
+                : site.targetBody === 'Mars'
+                  ? 'Mars'
+                  : 'Bulan & Mars (Analog Ganda)'}
             </span>
             <span aria-hidden="true">·</span>
             <span>{site.biome}</span>
             <span aria-hidden="true">·</span>
-            <span className={`font-mono-tabular font-semibold ${tokens.heading}`}>
-              {site.similarityScore.toFixed(1)}% kecocokan
-            </span>
+            <span className={`font-medium ${tokens.heading}`}>{site.validationStatus}</span>
+          </div>
+          <div className={`mt-1 flex items-center gap-1.5 text-[11px] font-mono-tabular flex-wrap ${tokens.heading}`}>
+            <span className={tokens.mutedText}>Komparatif:</span>
+            <span className="font-semibold whitespace-nowrap">🌙 Bulan {site.moonSimilarityScore.toFixed(1)}%</span>
+            <span aria-hidden="true" className={tokens.mutedText}>·</span>
+            <span className="font-semibold whitespace-nowrap">🪐 Mars {site.marsSimilarityScore.toFixed(1)}%</span>
           </div>
           <h2 className={`font-display text-lg font-semibold mt-1 leading-snug ${tokens.heading}`}>
             {site.name}
@@ -182,15 +208,17 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
               Top 5 Rekomendasi Material Misi
             </h3>
             <span className={`text-[11px] font-mono-tabular ${tokens.mutedText}`}>
-              Skor suhu, asam & terrain
+              Skor multi-faktor (maks 92%)
             </span>
           </div>
           <div className="space-y-2">
-            {top5Materials.map((rec) => (
+            {top5Materials.map((rec) => {
+              const band = getMaterialScoreBand(rec.score);
+              return (
               <button
                 key={rec.material.id}
                 type="button"
-                onClick={() => onInspectMaterial(rec.material.id)}
+                onClick={() => onInspectMaterial(rec.material.id, site.id)}
                 className={`w-full text-left p-2.5 transition-colors ${tokens.card} ${
                   tokens.isDark ? 'hover:bg-white/[0.08]' : 'hover:bg-slate-50'
                 }`}
@@ -199,8 +227,8 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
                   <span className={`text-xs font-semibold ${tokens.heading}`}>
                     #{rec.rank} {rec.material.name}
                   </span>
-                  <span className={`text-[11px] font-mono-tabular font-semibold shrink-0 ${tokens.accentText}`}>
-                    {rec.score}%
+                  <span className={`text-[11px] font-mono-tabular font-semibold shrink-0 ${band.textClass}`}>
+                    {rec.score}% · {band.label}
                   </span>
                 </div>
                 <div className={`text-[11px] mt-0.5 flex flex-wrap items-center gap-x-2 ${tokens.mutedText}`}>
@@ -214,18 +242,90 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
                   {rec.fitReason}
                 </p>
               </button>
-            ))}
+              );
+            })}
           </div>
         </section>
 
-        {/* Summary & Geological Rationale */}
-        <section className="space-y-2">
+        {/* Summary, Geological Rationale & 4-Component Visual Score Breakdown */}
+        <section className="space-y-2.5" data-testid="site-score-breakdown">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Layers className="w-3.5 h-3.5" />
             Karakterisasi Geologi & Lingkungan
           </h3>
           <p className={`text-xs leading-relaxed ${tokens.heading}`}>{site.summary}</p>
           <p className={`text-xs leading-relaxed ${tokens.bodyText}`}>{site.geologicalRationale}</p>
+
+          <div className={`p-3 space-y-2.5 ${tokens.subCard}`}>
+            <div className="flex items-center justify-between gap-2 flex-wrap">
+              <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.heading}`}>
+                <BarChart3 className={`w-3.5 h-3.5 ${tokens.accentText}`} />
+                <span>Breakdown Skor Analog (4 Komponen)</span>
+              </div>
+              {site.targetBody === 'Moon & Mars' ? (
+                <div className={`flex items-center gap-0.5 p-0.5 rounded-md ${tokens.pillGroup}`} role="group" aria-label="Pilih target rincian skor">
+                  {(['Moon', 'Mars'] as const).map((t) => {
+                    const active = activeBreakdownTarget === t;
+                    return (
+                      <button
+                        key={t}
+                        type="button"
+                        onClick={() => setBreakdownTarget(t)}
+                        className={`px-2 py-0.5 rounded text-[10px] font-medium transition-colors ${
+                          active ? tokens.pillActive : tokens.pillInactive
+                        }`}
+                      >
+                        {t === 'Moon' ? '🌙 Bulan' : '🪐 Mars'}
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : (
+                <span className={`text-[10px] font-mono-tabular font-semibold ${tokens.accentText}`}>
+                  Target: {activeBreakdownTarget === 'Moon' ? '🌙 Bulan' : '🪐 Mars'}
+                </span>
+              )}
+            </div>
+
+            <div className="space-y-2">
+              {site.scoreComponents.map((comp) => {
+                const pts = activeBreakdownTarget === 'Moon' ? comp.moonPts : comp.marsPts;
+                const pct = Math.max(0, Math.min(100, Math.round((pts / comp.maxPts) * 100)));
+                const barColor =
+                  pct >= 75
+                    ? 'bg-emerald-500'
+                    : pct >= 50
+                      ? 'bg-sky-500'
+                      : pct >= 25
+                        ? 'bg-amber-500'
+                        : 'bg-rose-500';
+                return (
+                  <div key={comp.id} className="space-y-1">
+                    <div className="flex items-center justify-between gap-2 text-[11px]">
+                      <span className={tokens.bodyText}>{comp.label}</span>
+                      <span className={`font-mono-tabular font-semibold ${tokens.heading}`}>
+                        {pts.toFixed(1)} / {comp.maxPts}
+                      </span>
+                    </div>
+                    <div
+                      className={`w-full h-1.5 rounded-full overflow-hidden ${
+                        tokens.isDark ? 'bg-white/10' : 'bg-slate-200'
+                      }`}
+                    >
+                      <div
+                        className={`h-full rounded-full transition-all duration-300 ${barColor}`}
+                        style={{ width: `${pct}%` }}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <p className={`text-[10px] font-mono-tabular leading-relaxed pt-1 border-t ${tokens.divider} ${tokens.mutedText}`}>
+              {site.scoreBreakdown}
+            </p>
+          </div>
         </section>
 
         {/* Comparative Metrics Matrix */}
@@ -233,9 +333,9 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           <h3 className={`text-xs font-semibold ${tokens.accentText}`}>
             Perbandingan Parameter Bumi vs {site.targetBody}
           </h3>
-          <div className={`divide-y overflow-hidden ${tokens.card} ${tokens.divider}`}>
+          <div className={`overflow-hidden ${tokens.card}`}>
             {site.comparativeMetrics.map((m) => (
-              <div key={m.parameter} className="p-3 space-y-1">
+              <div key={m.parameter} className={`p-3 space-y-1 border-b last:border-b-0 ${tokens.divider}`}>
                 <div className={`text-xs font-medium ${tokens.heading}`}>{m.parameter}</div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div>
@@ -313,6 +413,28 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
               </div>
             ))}
           </div>
+
+          {site.scientificReferences.length > 0 && (
+            <div className="pt-2 space-y-1.5">
+              <div className={`text-[11px] font-semibold ${tokens.heading}`}>
+                Referensi Jurnal & Publikasi Ilmiah ({site.scientificReferences.length})
+              </div>
+              {site.scientificReferences.map((ref) => (
+                <a
+                  key={ref.url + ref.citation}
+                  href={ref.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`flex items-start justify-between gap-2 text-[11px] py-1.5 px-2.5 transition-colors ${tokens.subCard} ${tokens.bodyText} ${
+                    tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+                  }`}
+                >
+                  <span className="leading-snug">{ref.citation}</span>
+                  <ExternalLink className={`w-3 h-3 shrink-0 mt-0.5 ${tokens.accentText}`} />
+                </a>
+              ))}
+            </div>
+          )}
         </section>
       </div>
 

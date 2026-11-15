@@ -2,11 +2,12 @@ import React from 'react';
 import { MapPin, Thermometer, X } from 'lucide-react';
 import { AnalogSite } from '../data/analogSites';
 import { formatCoordinatesDMS } from '../utils/geoMath';
-import { getTargetBadgeLabel } from '../utils/analogFilter';
+import { TargetFilter, getTargetBadgeLabel } from '../utils/analogFilter';
 import { ColorTheme, VisualStyle, getThemeTokens } from '../types/theme';
 
 interface AllSitesDrawerProps {
   sites: AnalogSite[];
+  targetFilter?: TargetFilter;
   selectedSiteId: string | null;
   visualStyle: VisualStyle;
   colorTheme: ColorTheme;
@@ -16,6 +17,7 @@ interface AllSitesDrawerProps {
 
 export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
   sites,
+  targetFilter = 'All',
   selectedSiteId,
   visualStyle,
   colorTheme,
@@ -23,12 +25,26 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
   onClose,
 }) => {
   const tokens = getThemeTokens(visualStyle, colorTheme);
+  const sortCaption =
+    targetFilter === 'Moon'
+      ? 'Diurutkan berdasarkan kecocokan Bulan'
+      : targetFilter === 'Mars'
+        ? 'Diurutkan berdasarkan kecocokan Mars'
+        : 'Diurutkan berdasarkan indeks kecocokan target';
+
+  const rowBorderClass = tokens.isCartoon
+    ? tokens.isDark
+      ? 'border-[#818cf8]/15'
+      : 'border-[#0e1a18]/10'
+    : tokens.isDark
+      ? 'border-white/[0.06]'
+      : 'border-slate-900/[0.06]';
 
   return (
     <aside
       aria-label="Daftar seluruh situs analog terkarakterisasi"
       data-testid="all-sites-drawer"
-      className={`w-[368px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
+      className={`w-[368px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-225px)] sm:max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
     >
       <div className={`px-4 py-3 border-b flex items-center justify-between ${tokens.divider}`}>
         <div>
@@ -36,7 +52,7 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
             Katalog Situs Analog ({sites.length})
           </h2>
           <p className={`text-[11px] ${tokens.mutedText}`}>
-            Diurutkan berdasarkan indeks kecocokan Bulan & Mars
+            {sortCaption}
           </p>
         </div>
         <button
@@ -51,7 +67,7 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
         </button>
       </div>
 
-      <div className={`flex-1 overflow-y-auto earth-scroll divide-y ${tokens.divider}`}>
+      <div className="flex-1 overflow-y-auto earth-scroll">
         {sites.map((site, idx) => {
           const isSelected = site.id === selectedSiteId;
           return (
@@ -59,7 +75,7 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
               key={site.id}
               type="button"
               onClick={() => onSelectSite(site)}
-              className={`w-full text-left px-4 py-3 transition-colors flex items-start gap-3 ${
+              className={`w-full text-left px-4 py-3 border-b last:border-b-0 ${rowBorderClass} transition-colors flex items-start gap-3 ${
                 isSelected
                   ? tokens.isDark
                     ? 'bg-white/15'
@@ -77,12 +93,25 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
                   <span className={`text-xs font-semibold truncate ${tokens.heading}`}>
                     {site.name}
                   </span>
-                  <span className={`text-[11px] font-mono-tabular font-semibold shrink-0 ${tokens.accentText}`}>
-                    {site.similarityScore.toFixed(1)}%
-                  </span>
+                  <div className="text-[10px] font-mono-tabular font-semibold shrink-0 flex items-center gap-2">
+                    <span className={targetFilter === 'Mars' ? tokens.mutedText : tokens.accentText}>
+                      🌙 {site.moonSimilarityScore.toFixed(1)}%
+                    </span>
+                    <span className={targetFilter === 'Moon' ? tokens.mutedText : tokens.accentText}>
+                      🪐 {site.marsSimilarityScore.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
                 <div className={`text-[11px] mt-0.5 flex items-center gap-1.5 flex-wrap ${tokens.mutedText}`}>
-                  <MapPin className="w-3 h-3 shrink-0" style={{ color: site.accentColor }} />
+                  {site.targetBody === 'Moon & Mars' ? (
+                    <span
+                      aria-hidden="true"
+                      className="w-2.5 h-2.5 rounded-full shrink-0 border border-black/25"
+                      style={{ background: 'linear-gradient(90deg, #3b82f6 50%, #ef4444 50%)' }}
+                    />
+                  ) : (
+                    <MapPin className="w-3 h-3 shrink-0" style={{ color: site.accentColor }} />
+                  )}
                   <span className="truncate">{site.country} · {getTargetBadgeLabel(site.targetBody)}</span>
                   <span aria-hidden="true">·</span>
                   <span className="inline-flex items-center gap-0.5 font-mono-tabular">

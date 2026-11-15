@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import {
   ArrowLeft,
+  BarChart3,
   Calendar,
   GitCompareArrows,
   Mountain,
@@ -8,9 +9,9 @@ import {
   ShieldCheck,
   Thermometer,
 } from 'lucide-react';
-import { AnalogSite } from '../data/analogSites';
+import { AnalogSite, TargetBody } from '../data/analogSites';
 import { MaterialCategory } from '../data/materials';
-import { ComparisonNeed, compareSites } from '../utils/materialMatcher';
+import { ComparisonNeed, compareSites, getMaterialScoreBand } from '../utils/materialMatcher';
 import { ColorTheme, VisualStyle, getThemeTokens } from '../types/theme';
 import { CartoonPageStickers } from './CartoonStickers';
 
@@ -21,7 +22,36 @@ interface CompareSitesPageProps {
   colorTheme: ColorTheme;
   onRepick: () => void;
   onExitCompare: () => void;
-  onInspectMaterial: (materialId: string) => void;
+  onInspectMaterial: (materialId: string, siteId: string) => void;
+}
+
+function getPrimaryTargetLabel(targetBody: TargetBody): string {
+  if (targetBody === 'Moon') return 'Target Primer: 🌙 Bulan';
+  if (targetBody === 'Mars') return 'Target Primer: 🪐 Mars';
+  return 'Target Ganda: 🌙 Bulan & 🪐 Mars';
+}
+
+function getComponentPrimaryDisplay(
+  site: AnalogSite,
+  comp: AnalogSite['scoreComponents'][number]
+): { valueText: string; pct: number } {
+  if (site.targetBody === 'Moon') {
+    return {
+      valueText: `${comp.moonPts.toFixed(1)} / ${comp.maxPts}`,
+      pct: Math.max(0, Math.min(100, Math.round((comp.moonPts / comp.maxPts) * 100))),
+    };
+  }
+  if (site.targetBody === 'Mars') {
+    return {
+      valueText: `${comp.marsPts.toFixed(1)} / ${comp.maxPts}`,
+      pct: Math.max(0, Math.min(100, Math.round((comp.marsPts / comp.maxPts) * 100))),
+    };
+  }
+  const avgPts = (comp.moonPts + comp.marsPts) / 2;
+  return {
+    valueText: `🌙 ${comp.moonPts.toFixed(1)} · 🪐 ${comp.marsPts.toFixed(1)} / ${comp.maxPts}`,
+    pct: Math.max(0, Math.min(100, Math.round((avgPts / comp.maxPts) * 100))),
+  };
 }
 
 const NEED_OPTIONS: Array<{ id: ComparisonNeed; label: string }> = [
@@ -153,6 +183,73 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
           </div>
         </div>
 
+        {/* Aligned 4-Component Score Breakdown Comparison Table */}
+        <div className={`p-4 md:p-5 space-y-3 ${tokens.card}`} data-testid="compare-score-matrix">
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h2 className={`font-display text-sm md:text-base font-bold flex items-center gap-2 ${tokens.heading}`}>
+              <BarChart3 className={`w-4 h-4 ${tokens.accentText}`} />
+              <span>Matriks Perbandingan 4 Komponen Skor Analog</span>
+            </h2>
+            {siteA.targetBody !== siteB.targetBody && (
+              <span className={`text-[11px] font-medium px-2.5 py-1 rounded-md ${tokens.subCard} ${tokens.mutedText}`}>
+                Perbandingan lintas target: {getPrimaryTargetLabel(siteA.targetBody)} vs {getPrimaryTargetLabel(siteB.targetBody)}
+              </span>
+            )}
+          </div>
+
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse text-xs">
+              <thead>
+                <tr className={`border-b ${tokens.divider}`}>
+                  <th className={`py-2 pr-3 font-semibold ${tokens.mutedText}`}>Komponen Skor</th>
+                  <th className={`py-2 px-3 font-semibold ${tokens.heading}`}>
+                    <div>Lokasi A · {siteA.name.split('(')[0].trim()}</div>
+                    <div className={`text-[11px] font-medium ${tokens.accentText}`}>
+                      {getPrimaryTargetLabel(siteA.targetBody)} ({siteA.similarityScore.toFixed(1)}%)
+                    </div>
+                  </th>
+                  <th className={`py-2 pl-3 font-semibold ${tokens.heading}`}>
+                    <div>Lokasi B · {siteB.name.split('(')[0].trim()}</div>
+                    <div className={`text-[11px] font-medium ${tokens.accentText}`}>
+                      {getPrimaryTargetLabel(siteB.targetBody)} ({siteB.similarityScore.toFixed(1)}%)
+                    </div>
+                  </th>
+                </tr>
+              </thead>
+              <tbody className={`divide-y ${tokens.divider}`}>
+                {siteA.scoreComponents.map((compA, idx) => {
+                  const compB = siteB.scoreComponents[idx];
+                  const dispA = getComponentPrimaryDisplay(siteA, compA);
+                  const dispB = getComponentPrimaryDisplay(siteB, compB);
+                  return (
+                    <tr key={compA.id}>
+                      <td className={`py-2.5 pr-3 font-medium whitespace-nowrap ${tokens.bodyText}`}>
+                        {compA.label}
+                      </td>
+                      <td className="py-2.5 px-3 min-w-[180px]">
+                        <div className={`font-mono-tabular font-semibold ${tokens.heading}`}>
+                          {dispA.valueText}
+                        </div>
+                        <div className={`w-full h-1.5 rounded-full mt-1 overflow-hidden ${tokens.isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                          <div className="h-full rounded-full bg-sky-500" style={{ width: `${dispA.pct}%` }} />
+                        </div>
+                      </td>
+                      <td className="py-2.5 pl-3 min-w-[180px]">
+                        <div className={`font-mono-tabular font-semibold ${tokens.heading}`}>
+                          {dispB.valueText}
+                        </div>
+                        <div className={`w-full h-1.5 rounded-full mt-1 overflow-hidden ${tokens.isDark ? 'bg-white/10' : 'bg-slate-200'}`}>
+                          <div className="h-full rounded-full bg-emerald-500" style={{ width: `${dispB.pct}%` }} />
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
         {/* Two-Column Side-by-Side Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
           {[
@@ -162,13 +259,31 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
             <div key={site.id} className={`p-5 flex flex-col gap-4 ${tokens.card}`}>
               {/* Site Header */}
               <div className={`pb-3 border-b ${tokens.divider}`}>
-                <div className="flex items-center justify-between gap-2">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className={`text-xs font-bold ${tokens.accentText}`}>
-                    {label} · {site.targetBody}
+                    {label} · {getPrimaryTargetLabel(site.targetBody)}
                   </span>
-                  <span className={`text-xs font-mono-tabular font-bold ${tokens.heading}`}>
-                    {site.similarityScore.toFixed(1)}% kecocokan
-                  </span>
+                  <div className="text-xs font-mono-tabular flex items-center gap-2">
+                    <span
+                      className={
+                        site.targetBody === 'Moon' || site.targetBody === 'Moon & Mars'
+                          ? `font-bold ${tokens.heading}`
+                          : tokens.mutedText
+                      }
+                    >
+                      🌙 Bulan: {site.moonSimilarityScore.toFixed(1)}%
+                    </span>
+                    <span aria-hidden="true" className={tokens.mutedText}>·</span>
+                    <span
+                      className={
+                        site.targetBody === 'Mars' || site.targetBody === 'Moon & Mars'
+                          ? `font-bold ${tokens.heading}`
+                          : tokens.mutedText
+                      }
+                    >
+                      🪐 Mars: {site.marsSimilarityScore.toFixed(1)}%
+                    </span>
+                  </div>
                 </div>
                 <h2 className={`font-display text-lg font-bold mt-1 ${tokens.heading}`}>
                   {site.name}
@@ -232,11 +347,12 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                 <div className="space-y-2">
                   {recs.map((rec) => {
                     const isShared = comparison.sharedMaterialIds.includes(rec.material.id);
+                    const band = getMaterialScoreBand(rec.score);
                     return (
                       <button
                         key={rec.material.id}
                         type="button"
-                        onClick={() => onInspectMaterial(rec.material.id)}
+                        onClick={() => onInspectMaterial(rec.material.id, site.id)}
                         className={`w-full text-left p-3 transition-colors ${tokens.subCard} ${
                           tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
                         }`}
@@ -245,8 +361,8 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                           <span className={`text-xs font-semibold ${tokens.heading}`}>
                             #{rec.rank} {rec.material.name}
                           </span>
-                          <span className={`text-xs font-mono-tabular font-semibold ${tokens.accentText}`}>
-                            {rec.score}%{isShared ? ' · Lintas Situs' : ''}
+                          <span className={`text-xs font-mono-tabular font-semibold shrink-0 ${band.textClass}`}>
+                            {rec.score}% · {band.label}{isShared ? ' · Lintas Situs' : ''}
                           </span>
                         </div>
                         <div className={`text-[11px] mt-1 ${tokens.bodyText}`}>

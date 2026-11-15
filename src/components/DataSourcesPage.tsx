@@ -105,7 +105,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
           <div className={`p-4 ${tokens.card}`}>
             <div className={`font-semibold text-sm ${tokens.accentText}`}>1. Morfometri & Topografi</div>
             <p className={`mt-1.5 leading-relaxed ${tokens.bodyText}`}>
-              Gradien lereng dan kekasaran terrain dibandingkan antara DEM SRTM 30m / DEMNAS 8m dengan LRO LOLA (Bulan) dan HiRISE DTM (Mars).
+              Gradien lereng dan kekasaran terrain dibandingkan antara SRTM 30m / ASTER GDEM / DEMNAS 8m (serta ArcticDEM 2m untuk lintang &gt;60°LU) dengan LRO LOLA (Bulan) dan HiRISE DTM (Mars).
             </p>
           </div>
           <div className={`p-4 ${tokens.card}`}>
@@ -169,8 +169,17 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                   </div>
                 </div>
 
-                <div className={`mt-3 pt-2.5 border-t flex items-center justify-between text-[11px] font-mono-tabular ${tokens.divider} ${tokens.mutedText}`}>
-                  <span>ID Dataset: {src.datasetIdentifier}</span>
+                <div className={`mt-3 pt-2.5 border-t flex flex-wrap items-center justify-between gap-2 text-[11px] ${tokens.divider} ${tokens.mutedText}`}>
+                  <span className="font-mono-tabular">ID Dataset: {src.datasetIdentifier}</span>
+                  <a
+                    href={src.referenceUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className={`inline-flex items-center gap-1 hover:underline ${tokens.accentText}`}
+                  >
+                    <span>Referensi: {src.scientificReference}</span>
+                    <ExternalLink className="w-3 h-3 shrink-0" />
+                  </a>
                 </div>
               </article>
             ))

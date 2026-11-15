@@ -1,20 +1,25 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://ai.google.dev/static/site-assets/images/share-ais-513315318.png" />
-</div>
+# TerraAnalog: NASA Planetary Analog Explorer
 
-# Run and deploy your AI Studio app
+Peta interaktif situs analog di Bumi untuk lokasi pendaratan dan markas di Bulan dan Mars. Dibangun dengan React, Vite, TypeScript, Tailwind, dan Leaflet (peta citra Esri). **Tidak butuh API key.**
 
-This contains everything you need to run your app locally.
+> Proyek ini harus dibangun dulu. Membuka `index.html` dengan klik dua kali akan menampilkan halaman kosong. Gunakan salah satu cara di bawah.
 
-View your app in AI Studio: https://ai.studio/apps/88422a5c-cf6b-4ea0-8be6-f523b14ed93c
+## Menjalankan di lokal
+Kebutuhan: Node.js LTS (20 atau lebih baru, https://nodejs.org) dan koneksi internet (peta, font).
 
-## Run Locally
+- **Windows:** klik dua kali `run.bat`
+- **Mac/Linux:** `./run.sh`
+- **Manual:** `npm install`, lalu `npm run dev` (http://localhost:3000) atau `npm start` (http://localhost:4173)
 
-**Prerequisites:**  Node.js
+## Online lewat GitHub Pages
+1. Push repo ke GitHub (cabang `main`).
+2. Settings > Pages > Source: **GitHub Actions**.
+3. Tunggu workflow "Deploy to GitHub Pages" selesai di tab Actions. Situs aktif di `https://USERNAME.github.io/NAMA-REPO/`.
 
+## Struktur singkat
+- `src/components/`: halaman dan komponen (peta, panel analisis, perbandingan, sumber data).
+- `src/data/`: data situs analog, material, dan sumber data.
+- `src/utils/`: perhitungan geografi dan pencocokan material (`geoMath.test.ts` berisi tes).
+- `.github/workflows/deploy.yml`: otomatisasi deploy.
 
-1. Install dependencies:
-   `npm install`
-2. Set the `GEMINI_API_KEY` in [.env.local](.env.local) to your Gemini API key
-3. Run the app:
-   `npm run dev`
+Catatan: data dan skor di aplikasi adalah ringkasan untuk demo. Verifikasi ke sumber resmi (NASA, ESA, USGS) sebelum dipakai sebagai rujukan ilmiah.

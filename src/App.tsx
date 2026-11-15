@@ -1,7 +1,7 @@
-import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { GitCompareArrows, Globe2, Minus, Palette, Plus, X } from 'lucide-react';
+import { Suspense, lazy, useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { ChevronLeft, ChevronRight, GitCompareArrows, Globe2, Info, Minus, Palette, Plus, X } from 'lucide-react';
 import { ANALOG_SITES, AnalogSite } from './data/analogSites';
-import { TargetFilter, filterAnalogSites } from './utils/analogFilter';
+import { TargetFilter, filterAnalogSites, getTopFindingSite } from './utils/analogFilter';
 import { computeScaleBar, formatCoordinatesDMS } from './utils/geoMath';
 import { ColorTheme, VisualStyle, getThemeTokens } from './types/theme';
 import {
@@ -12,9 +12,16 @@ import {
 import { ActivePage, TopBar } from './components/TopBar';
 import { SiteAnalysisPanel } from './components/SiteAnalysisPanel';
 import { AllSitesDrawer } from './components/AllSitesDrawer';
-import { MaterialsInfoPage } from './components/MaterialsInfoPage';
-import { CompareSitesPage } from './components/CompareSitesPage';
-import { DataSourcesPage } from './components/DataSourcesPage';
+
+const MaterialsInfoPage = lazy(() =>
+  import('./components/MaterialsInfoPage').then((m) => ({ default: m.MaterialsInfoPage }))
+);
+const CompareSitesPage = lazy(() =>
+  import('./components/CompareSitesPage').then((m) => ({ default: m.CompareSitesPage }))
+);
+const DataSourcesPage = lazy(() =>
+  import('./components/DataSourcesPage').then((m) => ({ default: m.DataSourcesPage }))
+);
 
 export default function App() {
   const [visualStyle, setVisualStyle] = useState<VisualStyle>('realistic');
@@ -25,15 +32,19 @@ export default function App() {
   const [selectedSite, setSelectedSite] = useState<AnalogSite | null>(null);
   const [showSitesList, setShowSitesList] = useState(false);
   const [focusedMaterialId, setFocusedMaterialId] = useState<string | null>(null);
+  const [focusedSiteId, setFocusedSiteId] = useState<string | null>(null);
 
   // Compare two sites state
   const [compareMode, setCompareMode] = useState(false);
   const [compareSitesList, setCompareSitesList] = useState<AnalogSite[]>([]);
+  const [materialReturnPage, setMaterialReturnPage] = useState<'map' | 'compare'>('map');
 
   // Navigation history for back/forward buttons
   const [history, setHistory] = useState<AnalogSite[]>([]);
   const [historyIdx, setHistoryIdx] = useState(-1);
+  const [legendInfoOpen, setLegendInfoOpen] = useState(false);
 
+  const legendRef = useRef<HTMLDivElement>(null);
   const cmdSeqRef = useRef(0);
   const [globeCommand, setGlobeCommand] = useState<GlobeCommand | null>(null);
 
@@ -60,6 +71,11 @@ export default function App() {
   const visibleSites = useMemo(
     () => filterAnalogSites(ANALOG_SITES, { targetFilter }),
     [targetFilter]
+  );
+
+  const topVisibleSiteId = useMemo(
+    () => getTopFindingSite(visibleSites, targetFilter).id,
+    [visibleSites, targetFilter]
   );
 
   const issueCommand = useCallback((cmd: Omit<GlobeCommand, 'seq'>) => {
@@ -95,27 +111,30 @@ export default function App() {
   const handleSelectPin = useCallback(
     (site: AnalogSite) => {
       if (compareMode) {
-        setCompareSitesList((prev) => {
-          // Clicking an already-picked site toggles it off
-          if (prev.some((s) => s.id === site.id)) {
-            return prev.filter((s) => s.id !== site.id);
-          }
-          const next = prev.length >= 2 ? [prev[1], site] : [...prev, site];
-          if (next.length === 2) {
-            setActivePage('compare');
-          }
-          return next;
-        });
+        // Clicking an already-picked site toggles it off
+        if (compareSitesList.some((s) => s.id === site.id)) {
+          setCompareSitesList(compareSitesList.filter((s) => s.id !== site.id));
+          return;
+        }
+        const next =
+          compareSitesList.length >= 2
+            ? [compareSitesList[1], site]
+            : [...compareSitesList, site];
+        setCompareSitesList(next);
+        if (next.length === 2) {
+          setActivePage('compare');
+        }
         return;
       }
       flyToSite(site, 24, true);
     },
-    [compareMode, flyToSite]
+    [compareMode, compareSitesList, flyToSite]
   );
 
   const handleExitCompare = useCallback(() => {
     setCompareMode(false);
     setCompareSitesList([]);
+    setMaterialReturnPage('map');
     setActivePage('map');
   }, []);
 
@@ -143,10 +162,49 @@ export default function App() {
     }
   }, [activePage, compareMode, handleExitCompare, issueCommand, telemetry.altitudeKm]);
 
-  const handleOpenMaterial = useCallback((materialId: string | null = null) => {
-    setFocusedMaterialId(materialId);
-    setActivePage('materials');
-  }, []);
+  const handleOpenMaterial = useCallback(
+    (
+      materialId: string | null = null,
+      siteId: string | null = null,
+      returnTo: 'map' | 'compare' = 'map'
+    ) => {
+      setFocusedMaterialId(materialId);
+      setFocusedSiteId(siteId ?? selectedSite?.id ?? null);
+      setMaterialReturnPage(returnTo);
+      setActivePage('materials');
+    },
+    [selectedSite]
+  );
+
+  const handleCloseMaterials = useCallback(() => {
+    setFocusedMaterialId(null);
+    setFocusedSiteId(null);
+    if (materialReturnPage === 'compare' && compareSitesList.length === 2) {
+      setActivePage('compare');
+    } else {
+      if (compareSitesList.length >= 2) {
+        setCompareMode(false);
+        setCompareSitesList([]);
+      }
+      setActivePage('map');
+    }
+    setMaterialReturnPage('map');
+  }, [compareSitesList.length, materialReturnPage]);
+
+  const handleTargetFilterChange = useCallback(
+    (nextFilter: TargetFilter) => {
+      setTargetFilter(nextFilter);
+      if (
+        selectedSite &&
+        nextFilter !== 'All' &&
+        selectedSite.targetBody !== 'Moon & Mars' &&
+        selectedSite.targetBody !== nextFilter
+      ) {
+        setSelectedSite(null);
+      }
+    },
+    [selectedSite]
+  );
 
   const handleGoBack = useCallback(() => {
     if (historyIdx <= 0) return;
@@ -165,11 +223,29 @@ export default function App() {
   }, [flyToSite, history, historyIdx]);
 
   useEffect(() => {
+    if (!legendInfoOpen) return;
+    const handleOutside = (e: PointerEvent) => {
+      if (legendRef.current && !legendRef.current.contains(e.target as Node)) {
+        setLegendInfoOpen(false);
+      }
+    };
+    document.addEventListener('pointerdown', handleOutside);
+    return () => document.removeEventListener('pointerdown', handleOutside);
+  }, [legendInfoOpen]);
+
+  useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        if (activePage === 'materials' || activePage === 'sources') {
-          setActivePage('map');
-          setFocusedMaterialId(null);
+        if (legendInfoOpen) {
+          setLegendInfoOpen(false);
+        } else if (activePage === 'materials') {
+          handleCloseMaterials();
+        } else if (activePage === 'sources') {
+          if (compareMode && compareSitesList.length === 2) {
+            setActivePage('compare');
+          } else {
+            setActivePage('map');
+          }
         } else if (activePage === 'compare') {
           handleExitCompare();
         } else if (compareMode) {
@@ -183,7 +259,16 @@ export default function App() {
     };
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
-  }, [activePage, compareMode, handleExitCompare, selectedSite, showSitesList]);
+  }, [
+    activePage,
+    compareMode,
+    compareSitesList.length,
+    handleCloseMaterials,
+    handleExitCompare,
+    legendInfoOpen,
+    selectedSite,
+    showSitesList,
+  ]);
 
   const scaleBar = useMemo(
     () => computeScaleBar(telemetry.altitudeKm),
@@ -202,10 +287,17 @@ export default function App() {
       {/* Translucent Floating Top Header (Persistent Across All Pages) */}
       <TopBar
         activePage={activePage}
-        onNavigateMap={() => setActivePage('map')}
+        onNavigateMap={() => {
+          if (compareMode && compareSitesList.length >= 2) {
+            setCompareMode(false);
+            setCompareSitesList([]);
+          }
+          setMaterialReturnPage('map');
+          setActivePage('map');
+        }}
         allSites={ANALOG_SITES}
         targetFilter={targetFilter}
-        onTargetFilterChange={setTargetFilter}
+        onTargetFilterChange={handleTargetFilterChange}
         onSelectSite={(site) => {
           if (compareMode) {
             handleSelectPin(site);
@@ -218,21 +310,31 @@ export default function App() {
           setActivePage('map');
           setCompareMode(false);
           setCompareSitesList([]);
+          setMaterialReturnPage('map');
           setShowSitesList((v) => !v);
           if (!showSitesList) setSelectedSite(null);
         }}
         onToggleMaterialsPage={() => {
           if (activePage === 'materials') {
-            setActivePage('map');
-            setFocusedMaterialId(null);
+            handleCloseMaterials();
+          } else if (activePage === 'compare' && compareSitesList.length === 2) {
+            handleOpenMaterial(null, compareSitesList[0].id, 'compare');
           } else {
-            handleOpenMaterial(null);
+            handleOpenMaterial(null, selectedSite?.id ?? null, 'map');
           }
         }}
         compareMode={compareMode}
         onToggleCompareMode={handleToggleCompareMode}
         onToggleDataSourcesPage={() => {
-          setActivePage((p) => (p === 'sources' ? 'map' : 'sources'));
+          if (activePage === 'sources') {
+            if (compareMode && compareSitesList.length === 2) {
+              setActivePage('compare');
+            } else {
+              setActivePage('map');
+            }
+          } else {
+            setActivePage('sources');
+          }
         }}
         visualStyle={visualStyle}
         colorTheme={colorTheme}
@@ -248,6 +350,8 @@ export default function App() {
       >
         <LeafletMap
           sites={visibleSites}
+          targetFilter={targetFilter}
+          topSiteId={topVisibleSiteId}
           selectedSiteId={selectedSite?.id ?? null}
           compareMode={compareMode}
           compareSiteIds={compareSitesList.map((s) => s.id)}
@@ -306,19 +410,21 @@ export default function App() {
             {selectedSite ? (
               <div className="pointer-events-auto">
                 <SiteAnalysisPanel
+                  key={selectedSite.id}
                   site={selectedSite}
                   visualStyle={visualStyle}
                   colorTheme={colorTheme}
                   onClose={() => setSelectedSite(null)}
                   onZoomCloser={(site) => flyToSite(site, 6, false)}
                   onOpenDataSources={() => setActivePage('sources')}
-                  onInspectMaterial={(matId) => handleOpenMaterial(matId)}
+                  onInspectMaterial={(matId, siteId) => handleOpenMaterial(matId, siteId)}
                 />
               </div>
             ) : showSitesList ? (
               <div className="pointer-events-auto">
                 <AllSitesDrawer
                   sites={visibleSites}
+                  targetFilter={targetFilter}
                   selectedSiteId={null}
                   visualStyle={visualStyle}
                   colorTheme={colorTheme}
@@ -330,11 +436,46 @@ export default function App() {
           </div>
         )}
 
-        {/* Bottom-Right Map Zoom Controls & Telemetry */}
+        {/* Bottom-Right Cluster: Desktop (Zoom -> Legend -> Scale) | Mobile (Zoom -> Scale -> Legend) */}
         {isMapVisible && (
-          <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-2.5">
-            {/* Zoom Control Cluster */}
-            <div className="pointer-events-auto flex items-center gap-2">
+          <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-2">
+            {/* 1. History Back/Forward + Zoom Control Cluster (Always Top) */}
+            <div className="order-1 pointer-events-auto flex items-center gap-2">
+              {history.length > 1 && (
+                <div
+                  className={`h-9 rounded-full flex items-center overflow-hidden ${tokens.panel}`}
+                  aria-label="Riwayat lokasi yang dikunjungi"
+                >
+                  <button
+                    type="button"
+                    onClick={handleGoBack}
+                    disabled={historyIdx <= 0}
+                    title="Lokasi sebelumnya"
+                    aria-label="Lokasi sebelumnya"
+                    data-testid="history-back-btn"
+                    className={`w-9 h-full flex items-center justify-center transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${tokens.heading} ${
+                      tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+                    }`}
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                  </button>
+                  <div className={`w-px h-4 border-l ${tokens.divider}`} />
+                  <button
+                    type="button"
+                    onClick={handleGoForward}
+                    disabled={historyIdx >= history.length - 1}
+                    title="Lokasi berikutnya"
+                    aria-label="Lokasi berikutnya"
+                    data-testid="history-forward-btn"
+                    className={`w-9 h-full flex items-center justify-center transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${tokens.heading} ${
+                      tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
+                    }`}
+                  >
+                    <ChevronRight className="w-4 h-4" />
+                  </button>
+                </div>
+              )}
+
               <div className={`h-9 rounded-full flex items-center overflow-hidden ${tokens.panel}`}>
                 <button
                   type="button"
@@ -364,8 +505,68 @@ export default function App() {
               </div>
             </div>
 
-            {/* Scale Bar + Live Camera Altitude & DMS Coordinates */}
-            <div className={`pointer-events-auto flex items-end gap-2.5 text-[11px] font-mono-tabular px-2.5 py-1 ${tokens.panel}`}>
+            {/* 2. Pin Color Legend (Bottom on Mobile, Middle on Desktop) + Info Tooltip */}
+            <div
+              ref={legendRef}
+              data-testid="map-pin-legend"
+              className={`order-3 sm:order-2 pointer-events-auto relative flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-1 ${tokens.panel}`}
+            >
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#3b82f6] shrink-0" />
+                <span>Bulan</span>
+              </span>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
+                <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#ef4444] shrink-0" />
+                <span>Mars</span>
+              </span>
+              <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
+                <span
+                  className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
+                  style={{ background: 'linear-gradient(90deg, #3b82f6 50%, #ef4444 50%)' }}
+                />
+                <span>Bulan &amp; Mars</span>
+              </span>
+              <span className={`w-px h-3.5 border-l ${tokens.divider}`} aria-hidden="true" />
+              <button
+                type="button"
+                onClick={() => setLegendInfoOpen((v) => !v)}
+                aria-expanded={legendInfoOpen}
+                aria-label="Penjelasan arti warna pin"
+                title="Klik untuk penjelasan arti warna pin"
+                data-testid="legend-info-btn"
+                className={`w-5 h-5 -mr-0.5 rounded-full flex items-center justify-center transition-colors ${
+                  legendInfoOpen
+                    ? tokens.accentText
+                    : tokens.mutedText
+                } ${tokens.isDark ? 'hover:bg-white/10 hover:text-white' : 'hover:bg-black/5 hover:text-slate-900'}`}
+              >
+                <Info className="w-3.5 h-3.5" />
+              </button>
+
+              {legendInfoOpen && (
+                <div
+                  role="tooltip"
+                  data-testid="legend-info-tooltip"
+                  className={`absolute bottom-full right-0 mb-[84px] sm:mb-[52px] w-64 sm:w-72 max-w-[calc(100vw-1.75rem)] p-3 text-[11px] leading-relaxed z-[1070] shadow-2xl ${
+                    tokens.isCartoon
+                      ? tokens.panel
+                      : tokens.isDark
+                        ? 'bg-[#121722] border border-white/20 rounded-xl'
+                        : 'bg-white border border-slate-300 rounded-xl'
+                  }`}
+                >
+                  <div className={`font-semibold mb-1 ${tokens.heading}`}>
+                    Arti Warna Pin (Target Misi Primer)
+                  </div>
+                  <p className={tokens.bodyText}>
+                    Warna pin menunjukkan <span className={`font-semibold ${tokens.heading}`}>target misi utama</span> dalam uji lapangan NASA/ESA/USGS (Biru: Bulan, Merah: Mars, Belah: Analog Ganda). Skor persentase Bulan &amp; Mars tetap dihitung penuh pada setiap situs sebagai pembanding ilmiah.
+                  </p>
+                </div>
+              )}
+            </div>
+
+            {/* 3. Scale Bar + Live Camera Altitude & DMS Coordinates (Middle on Mobile, Bottom on Desktop) */}
+            <div className={`order-2 sm:order-3 pointer-events-auto flex items-end gap-2.5 text-[11px] font-mono-tabular px-2.5 py-1 ${tokens.panel}`}>
               <div className="hidden sm:flex flex-col items-end">
                 <span className={`text-[10px] mb-0.5 ${tokens.mutedText}`}>{scaleBar.label}</span>
                 <div
@@ -386,48 +587,62 @@ export default function App() {
         )}
       </main>
 
-      {/* Dedicated Full-Screen Pages (Sharing One Persistent Header, Style Toggle, and Theme Toggle) */}
-      {activePage === 'materials' && (
-        <div className="relative z-[1010] w-full h-full">
-          <MaterialsInfoPage
-            visualStyle={visualStyle}
-            colorTheme={colorTheme}
-            initialMaterialId={focusedMaterialId}
-            onBackToMap={() => {
-              setActivePage('map');
-              setFocusedMaterialId(null);
-            }}
-          />
-        </div>
-      )}
+      {/* Dedicated Full-Screen Pages (Lazy-loaded for lean initial map chunk) */}
+      <Suspense
+        fallback={
+          <div className={`relative z-[1010] w-full h-full flex items-center justify-center text-xs ${tokens.pageCanvas} ${tokens.mutedText}`}>
+            Memuat halaman analisis...
+          </div>
+        }
+      >
+        {activePage === 'materials' && (
+          <div className="relative z-[1010] w-full h-full">
+            <MaterialsInfoPage
+              visualStyle={visualStyle}
+              colorTheme={colorTheme}
+              initialMaterialId={focusedMaterialId}
+              initialSiteId={focusedSiteId}
+              backLabel={materialReturnPage === 'compare' ? 'Kembali ke Perbandingan' : 'Kembali ke Peta'}
+              onBackToMap={handleCloseMaterials}
+            />
+          </div>
+        )}
 
-      {activePage === 'compare' && compareSitesList.length === 2 && (
-        <div className="relative z-[1010] w-full h-full">
-          <CompareSitesPage
-            siteA={compareSitesList[0]}
-            siteB={compareSitesList[1]}
-            visualStyle={visualStyle}
-            colorTheme={colorTheme}
-            onRepick={() => {
-              setCompareSitesList([]);
-              setCompareMode(true);
-              setActivePage('map');
-            }}
-            onExitCompare={handleExitCompare}
-            onInspectMaterial={(matId) => handleOpenMaterial(matId)}
-          />
-        </div>
-      )}
+        {activePage === 'compare' && compareSitesList.length === 2 && (
+          <div className="relative z-[1010] w-full h-full">
+            <CompareSitesPage
+              siteA={compareSitesList[0]}
+              siteB={compareSitesList[1]}
+              visualStyle={visualStyle}
+              colorTheme={colorTheme}
+              onRepick={() => {
+                setCompareSitesList([]);
+                setCompareMode(true);
+                setMaterialReturnPage('map');
+                setActivePage('map');
+              }}
+              onExitCompare={handleExitCompare}
+              onInspectMaterial={(matId, siteId) => handleOpenMaterial(matId, siteId, 'compare')}
+            />
+          </div>
+        )}
 
-      {activePage === 'sources' && (
-        <div className="relative z-[1010] w-full h-full">
-          <DataSourcesPage
-            visualStyle={visualStyle}
-            colorTheme={colorTheme}
-            onBackToMap={() => setActivePage('map')}
-          />
-        </div>
-      )}
+        {activePage === 'sources' && (
+          <div className="relative z-[1010] w-full h-full">
+            <DataSourcesPage
+              visualStyle={visualStyle}
+              colorTheme={colorTheme}
+              onBackToMap={() => {
+                if (compareMode && compareSitesList.length === 2) {
+                  setActivePage('compare');
+                } else {
+                  setActivePage('map');
+                }
+              }}
+            />
+          </div>
+        )}
+      </Suspense>
 
       {/* Global Bottom-Left: Style Toggle (Realistis vs Kartun Lo-Fi) + Origami Attribution */}
       <div className="pointer-events-none fixed bottom-3 left-3.5 z-[1060] flex items-center gap-2">
@@ -458,18 +673,7 @@ export default function App() {
           )}
         </button>
 
-        <div className={`pointer-events-auto hidden md:flex items-center gap-2.5 text-[11px] px-3 py-1.5 ${tokens.panel}`}>
-          <span className={`font-display font-bold tracking-tight ${tokens.heading}`}>
-            Origami
-          </span>
-          <button
-            type="button"
-            onClick={() => setActivePage('sources')}
-            className={`underline transition-colors ${tokens.bodyText}`}
-          >
-            Atribusi data
-          </button>
-        </div>
+
       </div>
     </div>
   );

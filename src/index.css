@@ -41,17 +41,6 @@
   background-size: 24px 24px;
 }
 
-/* Outlined display text inspired by editorial sticker-zine typography */
-.cartoon-outlined-light {
-  color: transparent;
-  -webkit-text-stroke: 1.8px #0e1a18;
-}
-
-.cartoon-outlined-dark {
-  color: transparent;
-  -webkit-text-stroke: 1.8px #ff6584;
-}
-
 /* Custom subtle scrollbars tuned for dark and light modes */
 .earth-scroll::-webkit-scrollbar {
   width: 6px;

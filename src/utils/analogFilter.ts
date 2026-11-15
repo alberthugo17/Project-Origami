@@ -3,6 +3,15 @@ import { DATA_SOURCES, DataBodyFilter, DataSourceItem } from '../data/dataSource
 
 export type TargetFilter = 'All' | 'Moon' | 'Mars';
 
+export function getEffectiveSimilarityScore(
+  site: AnalogSite,
+  targetFilter: TargetFilter = 'All'
+): number {
+  if (targetFilter === 'Moon') return site.moonSimilarityScore;
+  if (targetFilter === 'Mars') return site.marsSimilarityScore;
+  return site.similarityScore;
+}
+
 export function filterAnalogSites(
   sites: AnalogSite[],
   options: {
@@ -43,7 +52,7 @@ export function filterAnalogSites(
       }
       return true;
     })
-    .sort((a, b) => b.similarityScore - a.similarityScore);
+    .sort((a, b) => getEffectiveSimilarityScore(b, target) - getEffectiveSimilarityScore(a, target));
 }
 
 export function filterDataSources(
@@ -69,7 +78,17 @@ export function filterDataSources(
   });
 }
 
-export function getTopFindingSite(sites: AnalogSite[] = ANALOG_SITES): AnalogSite {
+export function getTopFindingSite(
+  sites: AnalogSite[] = ANALOG_SITES,
+  targetFilter: TargetFilter = 'All'
+): AnalogSite {
+  if (sites.length === 0) return ANALOG_SITES[0];
+  if (targetFilter === 'Moon' || targetFilter === 'Mars') {
+    const sorted = [...sites].sort(
+      (a, b) => getEffectiveSimilarityScore(b, targetFilter) - getEffectiveSimilarityScore(a, targetFilter)
+    );
+    return sorted[0];
+  }
   return sites.find((s) => s.isTopFinding) ?? sites[0];
 }
 
