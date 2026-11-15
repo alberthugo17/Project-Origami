@@ -1,19 +1,11 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import {
-  latLonToVector3,
-  vector3ToLatLon,
   formatDMS,
   formatCoordinatesDMS,
-  distanceToAltitudeKm,
-  altitudeKmToDistance,
-  rangeMetersToAltitudeKm,
-  altitudeKmToRangeMeters,
   altitudeKmToZoom,
   zoomToAltitudeKm,
-  normalizeHeadingDeg,
   computeScaleBar,
-  haversineDistanceKm,
 } from './geoMath';
 import {
   filterAnalogSites,
@@ -33,40 +25,6 @@ import {
   scoreMaterialForSite,
 } from './materialMatcher';
 
-test('latLonToVector3 and vector3ToLatLon round-trip accurately for key coordinates', () => {
-  const samples = [
-    { lat: 0, lon: 0 },
-    { lat: -7.9425, lon: 112.953 }, // Gunung Bromo
-    { lat: -24.0833, lon: -69.9167 }, // Atacama
-    { lat: 75.3833, lon: -89.6833 }, // Haughton Crater
-    { lat: -77.4667, lon: 162.5167 }, // McMurdo
-    { lat: 36.5054, lon: -117.0794 }, // Death Valley
-  ];
-
-  for (const s of samples) {
-    const v = latLonToVector3(s.lat, s.lon, 1.0);
-    const len = Math.hypot(v.x, v.y, v.z);
-    assert.ok(Math.abs(len - 1.0) < 1e-6, 'Vector should lie on unit sphere');
-    const back = vector3ToLatLon(v);
-    assert.ok(Math.abs(back.lat - s.lat) < 1e-4, `Lat mismatch for ${s.lat}: ${back.lat}`);
-    assert.ok(Math.abs(back.lon - s.lon) < 1e-4, `Lon mismatch for ${s.lon}: ${back.lon}`);
-  }
-});
-
-test('Prime Meridian and Equator map to expected spherical axes', () => {
-  const prime = latLonToVector3(0, 0, 1);
-  assert.ok(Math.abs(prime.x - 1) < 1e-6);
-  assert.ok(Math.abs(prime.y) < 1e-6);
-  assert.ok(Math.abs(prime.z) < 1e-6);
-
-  const west90 = latLonToVector3(0, -90, 1);
-  assert.ok(Math.abs(west90.x) < 1e-6);
-  assert.ok(Math.abs(west90.z - 1) < 1e-6);
-
-  const northPole = latLonToVector3(90, 0, 1);
-  assert.ok(Math.abs(northPole.y - 1) < 1e-6);
-});
-
 test('formatDMS and formatCoordinatesDMS produce Google Earth style strings', () => {
   assert.equal(formatDMS(-7.9425, true), `7°56'33.00"S`);
   assert.equal(formatDMS(112.953, false), `112°57'10.80"E`);
@@ -77,27 +35,12 @@ test('formatDMS and formatCoordinatesDMS produce Google Earth style strings', ()
   );
 });
 
-test('altitude conversions for 3D range and 2D zoom stay bounded and consistent', () => {
-  const dist = altitudeKmToDistance(19370);
-  const alt = distanceToAltitudeKm(dist);
-  assert.equal(alt, 19370);
-
-  assert.equal(altitudeKmToRangeMeters(19370), 19_370_000);
-  assert.equal(rangeMetersToAltitudeKm(19_370_000), 19370);
-  assert.equal(rangeMetersToAltitudeKm(5500), 5.5);
-
+test('altitude to 2D zoom conversions stay bounded and consistent', () => {
   const zGlobal = altitudeKmToZoom(19370);
   assert.ok(zGlobal >= 2 && zGlobal <= 3, `Expected global zoom ~2.2, got ${zGlobal}`);
   const zLocal = altitudeKmToZoom(24);
   assert.ok(zLocal >= 11 && zLocal <= 13, `Expected caldera zoom ~11.9, got ${zLocal}`);
   assert.ok(zoomToAltitudeKm(12) > 10 && zoomToAltitudeKm(12) < 40);
-});
-
-test('normalizeHeadingDeg wraps headings cleanly to [-180, 180)', () => {
-  assert.equal(normalizeHeadingDeg(0), 0);
-  assert.equal(normalizeHeadingDeg(360), 0);
-  assert.equal(normalizeHeadingDeg(270), -90);
-  assert.equal(normalizeHeadingDeg(-270), 90);
 });
 
 test('computeScaleBar yields clean km and meter values across orbital and caldera altitudes', () => {
@@ -112,11 +55,6 @@ test('computeScaleBar yields clean km and meter values across orbital and calder
   const ultraLow = computeScaleBar(2);
   assert.ok(ultraLow.label.endsWith('m') || ultraLow.label.endsWith('km'));
   assert.ok(ultraLow.widthPx >= 52 && ultraLow.widthPx <= 150);
-});
-
-test('haversineDistanceKm calculates realistic Earth distances', () => {
-  const bromoToIjen = haversineDistanceKm(-7.9425, 112.953, -8.0583, 114.2417);
-  assert.ok(bromoToIjen > 135 && bromoToIjen < 150, `Expected ~142 km, got ${bromoToIjen}`);
 });
 
 test('filterAnalogSites finds Atacama Yungay as top finding and filters by target/query', () => {

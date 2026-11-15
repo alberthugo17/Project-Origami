@@ -123,12 +123,6 @@ export const TopBar: React.FC<TopBarProps> = ({
               src="./assets/aistudio/Untitled47_20261114195505_b30478be.png"
               alt="Origami Logo"
               className="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm bg-slate-800"
-              onError={(e) => {
-                const target = e.currentTarget;
-                if (!target.src.includes('/assets/')) {
-                  target.src = '/assets/aistudio/Untitled47_20261114195505_b30478be.png';
-                }
-              }}
             />
             <span className={`font-display text-sm font-extrabold tracking-tight whitespace-nowrap ${tokens.heading}`}>
               Project Origami
