@@ -37,21 +37,20 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
       <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-6">
         {/* Header */}
         <div className="space-y-3 pt-3">
-          <div className="flex items-center justify-between gap-3 flex-wrap">
-            <div className="flex items-center gap-3 flex-wrap">
-              <button
-                type="button"
-                onClick={onBackToMap}
-                data-testid="back-to-map-from-sources"
-                className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${tokens.secondaryButton}`}
-              >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Kembali ke Peta</span>
-              </button>
-              <div className={`flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
-                <Database className="w-4 h-4" />
-                <span>Inventaris Data Terbuka Bumi, Bulan & Mars</span>
-              </div>
+          <div className="flex items-center justify-between gap-x-3 gap-y-2 flex-wrap">
+            <button
+              type="button"
+              onClick={onBackToMap}
+              data-testid="back-to-map-from-sources"
+              className={`order-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors shrink-0 ${tokens.secondaryButton}`}
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              <span>Kembali ke Peta</span>
+            </button>
+
+            <div className={`order-3 md:order-2 w-full md:w-auto md:mr-auto flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
+              <Database className="w-4 h-4 shrink-0" />
+              <span>Inventaris Data Terbuka Bumi, Bulan & Mars</span>
             </div>
 
             <a
@@ -59,7 +58,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
               target="_blank"
               rel="noopener noreferrer"
               data-testid="data-analysis-pdf-btn"
-              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 ${tokens.primaryButton}`}
+              className={`order-2 md:order-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 ${tokens.primaryButton}`}
             >
               <FileText className="w-3.5 h-3.5" />
               <span>Analisis Data</span>
