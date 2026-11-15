@@ -120,7 +120,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             className="flex items-center gap-2 shrink-0 text-left focus:outline-none group"
           >
             <img
-              src="./assets/aistudio/Untitled47_20261114195505_b30478be.png"
+              src="./assets/logo/Untitled47_20261114195505_b30478be.png"
               alt="Origami Logo"
               className="w-6 h-6 rounded-full object-cover shrink-0 shadow-sm bg-slate-800"
             />
