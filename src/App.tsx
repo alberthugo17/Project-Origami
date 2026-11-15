@@ -78,6 +78,11 @@ export default function App() {
     [visibleSites, targetFilter]
   );
 
+  const compareSiteIds = useMemo(
+    () => compareSitesList.map((s) => s.id),
+    [compareSitesList]
+  );
+
   const issueCommand = useCallback((cmd: Omit<GlobeCommand, 'seq'>) => {
     cmdSeqRef.current += 1;
     setGlobeCommand({ ...cmd, seq: cmdSeqRef.current });
@@ -354,7 +359,7 @@ export default function App() {
           topSiteId={topVisibleSiteId}
           selectedSiteId={selectedSite?.id ?? null}
           compareMode={compareMode}
-          compareSiteIds={compareSitesList.map((s) => s.id)}
+          compareSiteIds={compareSiteIds}
           visualStyle={visualStyle}
           colorTheme={colorTheme}
           isVisible={isMapVisible}
@@ -373,12 +378,12 @@ export default function App() {
             <GitCompareArrows className={`w-4 h-4 shrink-0 ${tokens.accentText}`} />
             <div className="min-w-0">
               <span className={`font-semibold ${tokens.heading}`}>
-                Mode Bandingkan Lokasi ({compareSitesList.length}/2):{' '}
+                Compare Sites Mode ({compareSitesList.length}/2):{' '}
               </span>
               <span className={tokens.bodyText}>
                 {compareSitesList.length === 0
-                  ? 'Klik 2 pin lokasi di peta untuk membandingkan.'
-                  : `Dipilih A: ${compareSitesList[0].name}. Sekarang klik lokasi ke-2 di peta.`}
+                  ? 'Click 2 site pins on the map to compare.'
+                  : `Selected A: ${compareSitesList[0].name}. Now click the 2nd site on the map.`}
               </span>
             </div>
             <div className="flex items-center gap-1.5 ml-auto shrink-0">
@@ -394,11 +399,11 @@ export default function App() {
               <button
                 type="button"
                 onClick={handleExitCompare}
-                aria-label="Batalkan mode bandingkan"
+                aria-label="Cancel compare mode"
                 className={`px-2 py-1 rounded text-[11px] inline-flex items-center gap-1 ${tokens.secondaryButton}`}
               >
                 <X className="w-3 h-3" />
-                <span>Batal</span>
+                <span>Cancel</span>
               </button>
             </div>
           </div>
@@ -447,14 +452,14 @@ export default function App() {
               {history.length > 1 && (
                 <div
                   className={`h-9 rounded-full flex items-center overflow-hidden ${tokens.panel}`}
-                  aria-label="Riwayat lokasi yang dikunjungi"
+                  aria-label="History of visited sites"
                 >
                   <button
                     type="button"
                     onClick={handleGoBack}
                     disabled={historyIdx <= 0}
-                    title="Lokasi sebelumnya"
-                    aria-label="Lokasi sebelumnya"
+                    title="Previous site"
+                    aria-label="Previous site"
                     data-testid="history-back-btn"
                     className={`w-9 h-full flex items-center justify-center transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${tokens.heading} ${
                       tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
@@ -467,8 +472,8 @@ export default function App() {
                     type="button"
                     onClick={handleGoForward}
                     disabled={historyIdx >= history.length - 1}
-                    title="Lokasi berikutnya"
-                    aria-label="Lokasi berikutnya"
+                    title="Next site"
+                    aria-label="Next site"
                     data-testid="history-forward-btn"
                     className={`w-9 h-full flex items-center justify-center transition-colors disabled:opacity-35 disabled:cursor-not-allowed ${tokens.heading} ${
                       tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
@@ -483,8 +488,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => issueCommand({ type: 'zoom', zoomFactor: 1.8 })}
-                  title="Perkecil tampilan"
-                  aria-label="Perkecil zoom peta"
+                  title="Zoom out"
+                  aria-label="Zoom out map"
                   data-testid="zoom-out-btn"
                   className={`w-9 h-full flex items-center justify-center transition-colors ${tokens.heading} ${
                     tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
@@ -496,8 +501,8 @@ export default function App() {
                 <button
                   type="button"
                   onClick={() => issueCommand({ type: 'zoom', zoomFactor: 0.55 })}
-                  title="Perbesar tampilan"
-                  aria-label="Perbesar zoom peta"
+                  title="Zoom in"
+                  aria-label="Zoom in map"
                   data-testid="zoom-in-btn"
                   className={`w-9 h-full flex items-center justify-center transition-colors ${tokens.heading} ${
                     tokens.isDark ? 'hover:bg-white/10' : 'hover:bg-black/5'
@@ -516,7 +521,7 @@ export default function App() {
             >
               <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
                 <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#3b82f6] shrink-0" />
-                <span>Bulan</span>
+                <span>Moon</span>
               </span>
               <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
                 <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#ef4444] shrink-0" />
@@ -527,15 +532,15 @@ export default function App() {
                   className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full shrink-0"
                   style={{ background: 'linear-gradient(90deg, #3b82f6 50%, #ef4444 50%)' }}
                 />
-                <span>Bulan &amp; Mars</span>
+                <span>Moon &amp; Mars</span>
               </span>
               <span className={`w-px h-3.5 border-l ${tokens.divider}`} aria-hidden="true" />
               <button
                 type="button"
                 onClick={() => setLegendInfoOpen((v) => !v)}
                 aria-expanded={legendInfoOpen}
-                aria-label="Penjelasan arti warna pin"
-                title="Klik untuk penjelasan arti warna pin"
+                aria-label="Pin color explanation"
+                title="Click for an explanation of pin colors"
                 data-testid="legend-info-btn"
                 className={`w-5 h-5 -mr-0.5 rounded-full flex items-center justify-center transition-colors ${
                   legendInfoOpen
@@ -559,10 +564,10 @@ export default function App() {
                   }`}
                 >
                   <div className={`font-semibold mb-1 ${tokens.heading}`}>
-                    Arti Warna Pin (Target Misi Primer)
+                    Pin Color Meaning (Primary Mission Target)
                   </div>
                   <p className={tokens.bodyText}>
-                    Warna pin menunjukkan <span className={`font-semibold ${tokens.heading}`}>target misi utama</span> dalam uji lapangan NASA/ESA/USGS (Biru: Bulan, Merah: Mars, Belah: Analog Ganda). Skor persentase Bulan &amp; Mars tetap dihitung penuh pada setiap situs sebagai pembanding ilmiah.
+                    Pin color indicates the <span className={`font-semibold ${tokens.heading}`}>primary mission target</span> in NASA/ESA/USGS field tests (Blue: Moon, Red: Mars, Split: Dual Analog). Moon &amp; Mars percentage scores are still fully calculated for every site as a scientific comparison.
                   </p>
                 </div>
               )}
@@ -580,7 +585,7 @@ export default function App() {
                 />
               </div>
               <span data-testid="camera-altitude" className={tokens.heading}>
-                {telemetry.altitudeKm.toLocaleString('id-ID')} km
+                {telemetry.altitudeKm.toLocaleString('en-US')} km
               </span>
               <span data-testid="camera-coords" className={`hidden sm:inline ${tokens.bodyText}`}>
                 {formatCoordinatesDMS(telemetry.lat, telemetry.lon)}
@@ -594,7 +599,7 @@ export default function App() {
       <Suspense
         fallback={
           <div className={`relative z-[1010] w-full h-full flex items-center justify-center text-xs ${tokens.pageCanvas} ${tokens.mutedText}`}>
-            Memuat halaman analisis...
+            Loading analysis page...
           </div>
         }
       >
@@ -605,7 +610,7 @@ export default function App() {
               colorTheme={colorTheme}
               initialMaterialId={focusedMaterialId}
               initialSiteId={focusedSiteId}
-              backLabel={materialReturnPage === 'compare' ? 'Kembali ke Perbandingan' : 'Kembali ke Peta'}
+              backLabel={materialReturnPage === 'compare' ? 'Back to Comparison' : 'Back to Map'}
               onBackToMap={handleCloseMaterials}
             />
           </div>
@@ -655,8 +660,8 @@ export default function App() {
           aria-pressed={visualStyle === 'cartoon'}
           aria-label={
             visualStyle === 'realistic'
-              ? 'Ubah gaya tampilan ke Kartun Lo-Fi'
-              : 'Ubah gaya tampilan ke Realistis'
+              ? 'Switch display style to Lo-Fi Cartoon'
+              : 'Switch display style to Realistic'
           }
           data-testid="style-toggle-btn"
           className={`pointer-events-auto h-9 px-3.5 rounded-full flex items-center gap-1.5 text-xs font-medium transition-all whitespace-nowrap ${
@@ -666,12 +671,12 @@ export default function App() {
           {visualStyle === 'cartoon' ? (
             <>
               <Palette className="w-3.5 h-3.5 shrink-0" />
-              <span>Kartun Lo-Fi</span>
+              <span>Lo-Fi Cartoon</span>
             </>
           ) : (
             <>
               <Globe2 className="w-3.5 h-3.5 shrink-0" />
-              <span>Realistis</span>
+              <span>Realistic</span>
             </>
           )}
         </button>

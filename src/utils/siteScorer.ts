@@ -5,7 +5,7 @@ import type {
   ValidationStatus,
 } from '../data/analogSites';
 
-export type AridityClass = 'Hiper-Arid / Beku' | 'Arid / Semi-Arid' | 'Lembap / Basah';
+export type AridityClass = 'Hyper-Arid / Frozen' | 'Arid / Semi-Arid' | 'Humid / Wet';
 
 export interface SiteFidelityInputs {
   /** Kecocokan litologi & mineral terhadap Bulan (anortosit/mare basalt FeO-TiO2, breksi tumbukan): 1–5 */
@@ -97,7 +97,7 @@ export function computeSiteFidelityScores(site: ScorableSiteFields): SiteFidelit
   let lunarClimatePts = 0;
   let marsClimatePts = 0;
 
-  if (f.aridity === 'Hiper-Arid / Beku') {
+  if (f.aridity === 'Hyper-Arid / Frozen') {
     lunarClimatePts += 14;
     marsClimatePts += 14;
   } else if (f.aridity === 'Arid / Semi-Arid') {
@@ -139,9 +139,9 @@ export function computeSiteFidelityScores(site: ScorableSiteFields): SiteFidelit
 
   // 4. Scientific Validation & Mission Heritage (up to 16 pts)
   const validationPts =
-    site.validationStatus === 'Resmi NASA/ESA'
+    site.validationStatus === 'Official NASA/ESA'
       ? 12
-      : site.validationStatus === 'Jurnal Peer-Reviewed'
+      : site.validationStatus === 'Peer-Reviewed Journal'
         ? 8.5
         : 4.5;
 
@@ -165,26 +165,26 @@ export function computeSiteFidelityScores(site: ScorableSiteFields): SiteFidelit
     similarityScore = round1((moonSimilarityScore + marsSimilarityScore) / 2);
   }
 
-  const breakdownNote = `Skor terkalibrasi (maks 91.5% di Bumi): Geologi ${
+  const breakdownNote = `Calibrated score (max 91.5% on Earth): Geology ${
     site.targetBody === 'Moon'
       ? `${f.lunarGeologyScore}/5`
       : site.targetBody === 'Mars'
         ? `${f.marsGeologyScore}/5`
-        : `Bulan ${f.lunarGeologyScore}/5 · Mars ${f.marsGeologyScore}/5`
-  }, Iklim ${f.aridity}${f.hasActiveLiquidWaterOrRain ? ' (penalti air/hujan aktif)' : ''}, Status ${site.validationStatus}.`;
+        : `Moon ${f.lunarGeologyScore}/5 · Mars ${f.marsGeologyScore}/5`
+  }, Climate ${f.aridity}${f.hasActiveLiquidWaterOrRain ? ' (active water/rain penalty)' : ''}, Status ${site.validationStatus}.`;
 
   const scoreComponents: ScoreComponentBreakdown[] = [
     {
       id: 'geology',
-      label: 'Geologi & Mineralogi',
-      shortLabel: 'Geologi',
+      label: 'Geology & Mineralogy',
+      shortLabel: 'Geology',
       moonPts: round1(lunarGeoPts),
       marsPts: round1(marsGeoPts),
       maxPts: 34,
     },
     {
       id: 'terrain',
-      label: 'Terrain & Morfologi',
+      label: 'Terrain & Morphology',
       shortLabel: 'Terrain',
       moonPts: round1(lunarTerrainPts),
       marsPts: round1(marsTerrainPts),
@@ -192,16 +192,16 @@ export function computeSiteFidelityScores(site: ScorableSiteFields): SiteFidelit
     },
     {
       id: 'climate',
-      label: 'Iklim, Ariditas & Suhu',
-      shortLabel: 'Iklim/Suhu',
+      label: 'Climate, Aridity & Temperature',
+      shortLabel: 'Climate/Temp',
       moonPts: round1(lunarClimatePts),
       marsPts: round1(marsClimatePts),
       maxPts: 24,
     },
     {
       id: 'validation',
-      label: 'Validasi & Heritage Misi',
-      shortLabel: 'Validasi',
+      label: 'Validation & Mission Heritage',
+      shortLabel: 'Validation',
       moonPts: round1(totalValidationPts),
       marsPts: round1(totalValidationPts),
       maxPts: 16,

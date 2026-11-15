@@ -27,10 +27,10 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
   const tokens = getThemeTokens(visualStyle, colorTheme);
   const sortCaption =
     targetFilter === 'Moon'
-      ? 'Diurutkan berdasarkan kecocokan Bulan'
+      ? 'Sorted by Moon similarity'
       : targetFilter === 'Mars'
-        ? 'Diurutkan berdasarkan kecocokan Mars'
-        : 'Diurutkan berdasarkan indeks kecocokan target';
+        ? 'Sorted by Mars similarity'
+        : 'Sorted by target similarity index';
 
   const rowBorderClass = tokens.isCartoon
     ? tokens.isDark
@@ -42,14 +42,14 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
 
   return (
     <aside
-      aria-label="Daftar seluruh situs analog terkarakterisasi"
+      aria-label="List of all characterized analog sites"
       data-testid="all-sites-drawer"
       className={`w-[368px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-225px)] sm:max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
     >
       <div className={`px-4 py-3 border-b flex items-center justify-between ${tokens.divider}`}>
         <div>
           <h2 className={`font-display text-sm font-semibold ${tokens.heading}`}>
-            Katalog Situs Analog ({sites.length})
+            Analog Sites Catalog ({sites.length})
           </h2>
           <p className={`text-[11px] ${tokens.mutedText}`}>
             {sortCaption}
@@ -58,7 +58,7 @@ export const AllSitesDrawer: React.FC<AllSitesDrawerProps> = ({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Tutup daftar situs"
+          aria-label="Close sites list"
           className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors ${tokens.mutedText} ${
             tokens.isDark ? 'hover:text-white hover:bg-white/10' : 'hover:text-slate-900 hover:bg-black/5'
           }`}

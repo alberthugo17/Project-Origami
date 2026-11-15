@@ -62,7 +62,7 @@ export function filterDataSources(
 ): DataSourceItem[] {
   const q = query.trim().toLowerCase();
   return sources.filter((src) => {
-    if (bodyFilter !== 'Semua' && src.targetBody !== bodyFilter) return false;
+    if (bodyFilter !== 'All' && src.targetBody !== bodyFilter) return false;
     if (!q) return true;
     return [
       src.agency,
@@ -98,7 +98,7 @@ export function getSourcesForSite(site: AnalogSite): DataSourceItem[] {
 }
 
 export function getTargetBadgeLabel(body: TargetBody): string {
-  if (body === 'Moon') return 'Analog Bulan';
-  if (body === 'Mars') return 'Analog Mars';
-  return 'Analog Bulan & Mars';
+  if (body === 'Moon') return 'Moon Analog';
+  if (body === 'Mars') return 'Mars Analog';
+  return 'Moon & Mars Analog';
 }

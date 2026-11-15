@@ -63,7 +63,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
 
   return (
     <aside
-      aria-label={`Detail analisis analog ${site.name}`}
+      aria-label={`Analog analysis details for ${site.name}`}
       data-testid="site-analysis-panel"
       className={`w-[412px] max-w-[calc(100vw-2rem)] max-h-[calc(100vh-225px)] sm:max-h-[calc(100vh-175px)] flex flex-col overflow-hidden transition-colors duration-200 ${tokens.panel}`}
     >
@@ -72,12 +72,12 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <div className="min-w-0">
           <div className={`flex items-center gap-x-2 gap-y-1 text-xs flex-wrap ${tokens.mutedText}`}>
             <span className={`font-semibold ${tokens.accentText}`}>
-              Target Primer:{' '}
+              Primary Target:{' '}
               {site.targetBody === 'Moon'
-                ? 'Bulan'
+                ? 'Moon'
                 : site.targetBody === 'Mars'
                   ? 'Mars'
-                  : 'Bulan & Mars (Analog Ganda)'}
+                  : 'Moon & Mars (Dual Analog)'}
             </span>
             <span aria-hidden="true">·</span>
             <span>{site.biome}</span>
@@ -85,8 +85,8 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
             <span className={`font-medium ${tokens.heading}`}>{site.validationStatus}</span>
           </div>
           <div className={`mt-1 flex items-center gap-1.5 text-[11px] font-mono-tabular flex-wrap ${tokens.heading}`}>
-            <span className={tokens.mutedText}>Komparatif:</span>
-            <span className="font-semibold whitespace-nowrap">🌙 Bulan {site.moonSimilarityScore.toFixed(1)}%</span>
+            <span className={tokens.mutedText}>Comparative:</span>
+            <span className="font-semibold whitespace-nowrap">🌙 Moon {site.moonSimilarityScore.toFixed(1)}%</span>
             <span aria-hidden="true" className={tokens.mutedText}>·</span>
             <span className="font-semibold whitespace-nowrap">🪐 Mars {site.marsSimilarityScore.toFixed(1)}%</span>
           </div>
@@ -100,7 +100,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <button
           type="button"
           onClick={onClose}
-          aria-label="Tutup panel detail analisis"
+          aria-label="Close analysis details panel"
           data-testid="close-site-panel"
           className={`shrink-0 w-8 h-8 rounded-full flex items-center justify-center transition-colors ${tokens.mutedText} ${
             tokens.isDark ? 'hover:text-white hover:bg-white/10' : 'hover:text-slate-900 hover:bg-black/5'
@@ -115,21 +115,21 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         {/* Coordinates, Elevation & Temperature Strip */}
         <div className={`grid grid-cols-3 gap-2.5 pb-4 border-b ${tokens.divider}`}>
           <div>
-            <div className={`text-[11px] ${tokens.mutedText}`}>Koordinat</div>
+            <div className={`text-[11px] ${tokens.mutedText}`}>Coordinates</div>
             <div className={`text-[11px] font-mono-tabular mt-0.5 ${tokens.heading}`}>
               {formatCoordinatesDMS(site.lat, site.lon)}
             </div>
           </div>
           <div>
-            <div className={`text-[11px] ${tokens.mutedText}`}>Elevasi</div>
+            <div className={`text-[11px] ${tokens.mutedText}`}>Elevation</div>
             <div className={`text-xs font-mono-tabular mt-0.5 ${tokens.heading}`}>
-              {site.elevationM.toLocaleString('id-ID')} m mdpl
+              {site.elevationM.toLocaleString('en-US')} m a.s.l.
             </div>
           </div>
           <div>
             <div className={`text-[11px] flex items-center gap-1 ${tokens.mutedText}`}>
               <Thermometer className="w-3 h-3" />
-              Suhu Rata-Rata
+              Average Temperature
             </div>
             <div className={`text-xs font-mono-tabular font-semibold mt-0.5 ${tokens.accentText}`}>
               {site.temperatureProfile.avgC}°C ({site.temperatureProfile.minC}°..{site.temperatureProfile.maxC}°C)
@@ -141,14 +141,14 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className={`p-3 space-y-1.5 ${tokens.subCard}`} data-testid="site-temperature-section">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Thermometer className="w-3.5 h-3.5" />
-            Profil Temperatur Terdeteksi
+            Detected Temperature Profile
           </h3>
           <div className={`flex items-center gap-3 text-xs font-mono-tabular ${tokens.heading}`}>
-            <span>Rata-rata: {site.temperatureProfile.avgC}°C</span>
+            <span>Average: {site.temperatureProfile.avgC}°C</span>
             <span aria-hidden="true">·</span>
             <span>Min: {site.temperatureProfile.minC}°C</span>
             <span aria-hidden="true">·</span>
-            <span>Maks: {site.temperatureProfile.maxC}°C</span>
+            <span>Max: {site.temperatureProfile.maxC}°C</span>
           </div>
           <p className={`text-[11px] leading-relaxed ${tokens.bodyText}`}>
             {site.temperatureProfile.note}
@@ -159,15 +159,15 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className={`p-3 space-y-2 ${tokens.subCard}`} data-testid="site-terrain-section">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Mountain className="w-3.5 h-3.5" />
-            Kondisi Terrain & Kimia Permukaan
+            Terrain Conditions & Surface Chemistry
           </h3>
           <div className={`text-xs font-medium ${tokens.heading}`}>
             {site.terrainProfile.surfaceType}
           </div>
           <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-mono-tabular ${tokens.mutedText}`}>
-            <span>Kekasaran: {site.terrainProfile.roughness}</span>
+            <span>Roughness: {site.terrainProfile.roughness}</span>
             <span aria-hidden="true">·</span>
-            <span>Lereng: {site.terrainProfile.slopeRange}</span>
+            <span>Slope: {site.terrainProfile.slopeRange}</span>
             <span aria-hidden="true">·</span>
             <span>pH: {site.terrainProfile.acidityPh}</span>
           </div>
@@ -180,10 +180,10 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className={`p-3 space-y-2 ${tokens.subCard}`} data-testid="site-seasonal-section">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Calendar className="w-3.5 h-3.5" />
-            Rekomendasi Misi & Musim Terbaik
+            Mission Recommendations & Best Season
           </h3>
           <div className={`text-xs font-semibold ${tokens.heading}`}>
-            Jendela Optimal: {site.seasonalRecommendation.bestWindow}
+            Optimal Window: {site.seasonalRecommendation.bestWindow}
           </div>
           <p className={`text-[11px] leading-relaxed ${tokens.bodyText}`}>
             {site.seasonalRecommendation.climateCondition}
@@ -196,7 +196,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
             ))}
           </ul>
           <p className={`text-[11px] ${tokens.mutedText}`}>
-            Hindari: {site.seasonalRecommendation.avoidWindow}
+            Avoid: {site.seasonalRecommendation.avoidWindow}
           </p>
         </section>
 
@@ -205,10 +205,10 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           <div className="flex items-center justify-between gap-2">
             <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
               <ShieldCheck className="w-3.5 h-3.5" />
-              Top 5 Rekomendasi Material Misi
+              Top 5 Mission Material Recommendations
             </h3>
             <span className={`text-[11px] font-mono-tabular ${tokens.mutedText}`}>
-              Skor multi-faktor (maks 92%)
+              Multi-factor score (max 92%)
             </span>
           </div>
           <div className="space-y-2">
@@ -251,7 +251,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className="space-y-2.5" data-testid="site-score-breakdown">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <Layers className="w-3.5 h-3.5" />
-            Karakterisasi Geologi & Lingkungan
+            Geological & Environmental Characterization
           </h3>
           <p className={`text-xs leading-relaxed ${tokens.heading}`}>{site.summary}</p>
           <p className={`text-xs leading-relaxed ${tokens.bodyText}`}>{site.geologicalRationale}</p>
@@ -260,10 +260,10 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
             <div className="flex items-center justify-between gap-2 flex-wrap">
               <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.heading}`}>
                 <BarChart3 className={`w-3.5 h-3.5 ${tokens.accentText}`} />
-                <span>Breakdown Skor Analog (4 Komponen)</span>
+                <span>Analog Score Breakdown (4 Components)</span>
               </div>
               {site.targetBody === 'Moon & Mars' ? (
-                <div className={`flex items-center gap-0.5 p-0.5 rounded-md ${tokens.pillGroup}`} role="group" aria-label="Pilih target rincian skor">
+                <div className={`flex items-center gap-0.5 p-0.5 rounded-md ${tokens.pillGroup}`} role="group" aria-label="Select score breakdown target">
                   {(['Moon', 'Mars'] as const).map((t) => {
                     const active = activeBreakdownTarget === t;
                     return (
@@ -275,14 +275,14 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
                           active ? tokens.pillActive : tokens.pillInactive
                         }`}
                       >
-                        {t === 'Moon' ? '🌙 Bulan' : '🪐 Mars'}
+                        {t === 'Moon' ? '🌙 Moon' : '🪐 Mars'}
                       </button>
                     );
                   })}
                 </div>
               ) : (
                 <span className={`text-[10px] font-mono-tabular font-semibold ${tokens.accentText}`}>
-                  Target: {activeBreakdownTarget === 'Moon' ? '🌙 Bulan' : '🪐 Mars'}
+                  Target: {activeBreakdownTarget === 'Moon' ? '🌙 Moon' : '🪐 Mars'}
                 </span>
               )}
             </div>
@@ -331,7 +331,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         {/* Comparative Metrics Matrix */}
         <section className="space-y-2.5">
           <h3 className={`text-xs font-semibold ${tokens.accentText}`}>
-            Perbandingan Parameter Bumi vs {site.targetBody}
+            Earth vs {site.targetBody} Parameter Comparison
           </h3>
           <div className={`overflow-hidden ${tokens.card}`}>
             {site.comparativeMetrics.map((m) => (
@@ -339,11 +339,11 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
                 <div className={`text-xs font-medium ${tokens.heading}`}>{m.parameter}</div>
                 <div className="grid grid-cols-2 gap-2 text-[11px]">
                   <div>
-                    <span className={`block ${tokens.mutedText}`}>Situs Bumi:</span>
+                    <span className={`block ${tokens.mutedText}`}>Earth Site:</span>
                     <span className={`font-mono-tabular ${tokens.bodyText}`}>{m.earthValue}</span>
                   </div>
                   <div>
-                    <span className={`block ${tokens.mutedText}`}>Acuan Planet:</span>
+                    <span className={`block ${tokens.mutedText}`}>Planetary Benchmark:</span>
                     <span className={`font-mono-tabular font-medium ${tokens.accentText}`}>{m.planetaryBenchmark}</span>
                   </div>
                 </div>
@@ -357,7 +357,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className="space-y-2">
           <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
             <MapPin className="w-3.5 h-3.5" />
-            Aplikasi Uji Peralatan & Misi
+            Equipment & Mission Testing Applications
           </h3>
           <ul className={`space-y-1.5 text-xs list-disc pl-4 ${tokens.bodyText}`}>
             {site.missionApplications.map((app, i) => (
@@ -372,7 +372,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
         <section className="space-y-1.5">
           <h3 className="text-xs font-semibold text-amber-500 dark:text-amber-300 flex items-center gap-1.5">
             <AlertTriangle className="w-3.5 h-3.5" />
-            Kendala & Batasan Lapangan
+            Field Constraints & Limitations
           </h3>
           <ul className={`space-y-1 text-xs list-disc pl-4 ${tokens.bodyText}`}>
             {site.hazardsAndConstraints.map((h, i) => (
@@ -388,14 +388,14 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           <div className="flex items-center justify-between">
             <h3 className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.heading}`}>
               <Database className={`w-3.5 h-3.5 ${tokens.accentText}`} />
-              Sumber Data Analisis ({citations.length})
+              Analysis Data Sources ({citations.length})
             </h3>
             <button
               type="button"
               onClick={onOpenDataSources}
               className={`text-[11px] hover:underline whitespace-nowrap ${tokens.accentText}`}
             >
-              Lihat semua sumber
+              View all sources
             </button>
           </div>
           <div className="space-y-1.5">
@@ -417,7 +417,7 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           {site.scientificReferences.length > 0 && (
             <div className="pt-2 space-y-1.5">
               <div className={`text-[11px] font-semibold ${tokens.heading}`}>
-                Referensi Jurnal & Publikasi Ilmiah ({site.scientificReferences.length})
+                Journal References & Scientific Publications ({site.scientificReferences.length})
               </div>
               {site.scientificReferences.map((ref) => (
                 <a
@@ -446,14 +446,14 @@ export const SiteAnalysisPanel: React.FC<SiteAnalysisPanelProps> = ({
           className={`flex-1 inline-flex items-center justify-center gap-1.5 px-3 py-2 rounded-lg text-xs transition-colors whitespace-nowrap ${tokens.primaryButton}`}
         >
           <Navigation className="w-3.5 h-3.5" />
-          Zoom Dekat
+          Zoom Closer
         </button>
         <button
           type="button"
           onClick={onClose}
           className={`px-3.5 py-2 rounded-lg text-xs transition-colors whitespace-nowrap ${tokens.secondaryButton}`}
         >
-          Tutup
+          Close
         </button>
       </div>
     </aside>

@@ -116,7 +116,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               onNavigateMap();
               setMobileMenuOpen(false);
             }}
-            aria-label="Kembali ke Peta Origami"
+            aria-label="Back to Origami Map"
             className="flex items-center gap-2 shrink-0 text-left focus:outline-none group"
           >
             <img
@@ -130,7 +130,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           </button>
 
           {/* Clean Single-Line Navigation Pages */}
-          <nav aria-label="Menu utama" className="hidden sm:flex items-center gap-1.5 text-xs">
+          <nav aria-label="Main menu" className="hidden sm:flex items-center gap-1.5 text-xs">
             <button
               type="button"
               onClick={onToggleSitesList}
@@ -141,7 +141,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               )}`}
             >
               <List className="w-3.5 h-3.5" />
-              <span>Situs Analog</span>
+              <span>Analog Sites</span>
             </button>
             <button
               type="button"
@@ -153,7 +153,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               )}`}
             >
               <Layers className="w-3.5 h-3.5" />
-              <span>Info Material</span>
+              <span>Material Info</span>
             </button>
             <button
               type="button"
@@ -165,7 +165,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               )}`}
             >
               <GitCompareArrows className="w-3.5 h-3.5" />
-              <span>Bandingkan Lokasi</span>
+              <span>Compare Sites</span>
             </button>
             <button
               type="button"
@@ -177,7 +177,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               )}`}
             >
               <Database className="w-3.5 h-3.5" />
-              <span>Sumber Data</span>
+              <span>Data Sources</span>
             </button>
           </nav>
         </div>
@@ -187,19 +187,19 @@ export const TopBar: React.FC<TopBarProps> = ({
           <button
             type="button"
             onClick={onToggleColorTheme}
-            aria-label={colorTheme === 'dark' ? 'Ubah ke tema terang' : 'Ubah ke tema gelap'}
+            aria-label={colorTheme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'}
             data-testid="theme-toggle-btn"
             className={`flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap shrink-0 ${tokens.secondaryButton}`}
           >
             {colorTheme === 'dark' ? (
               <>
                 <Sun className="w-3.5 h-3.5 text-amber-400" />
-                <span>Terang</span>
+                <span>Light</span>
               </>
             ) : (
               <>
                 <Moon className="w-3.5 h-3.5 text-indigo-600" />
-                <span>Gelap</span>
+                <span>Dark</span>
               </>
             )}
           </button>
@@ -209,7 +209,7 @@ export const TopBar: React.FC<TopBarProps> = ({
             type="button"
             onClick={() => setMobileMenuOpen((prev) => !prev)}
             aria-expanded={mobileMenuOpen}
-            aria-label={mobileMenuOpen ? 'Tutup menu navigasi' : 'Buka menu navigasi'}
+            aria-label={mobileMenuOpen ? 'Close navigation menu' : 'Open navigation menu'}
             data-testid="mobile-menu-btn"
             className={`sm:hidden flex items-center gap-1.5 px-2.5 py-1 rounded-md text-xs font-medium transition-colors whitespace-nowrap ${tokens.secondaryButton}`}
           >
@@ -225,7 +225,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           <motion.div
             key="mobile-menu"
             role="menu"
-            aria-label="Menu navigasi mobile"
+            aria-label="Mobile navigation menu"
             data-testid="mobile-dropdown-menu"
             initial={{ opacity: 0, height: 0, y: -8 }}
             animate={{ opacity: 0.7, height: 'auto', y: 0 }}
@@ -235,7 +235,7 @@ export const TopBar: React.FC<TopBarProps> = ({
           >
             <div className="px-3.5 py-3 space-y-2.5 text-xs">
               <div className={`text-[11px] font-semibold px-0.5 ${tokens.mutedText}`}>
-                Navigasi Eksplorasi
+                Exploration Navigation
               </div>
               <div className="grid grid-cols-2 gap-2">
                 <button
@@ -250,7 +250,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   }`}
                 >
                   <List className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Situs Analog</span>
+                  <span className="truncate">Analog Sites</span>
                 </button>
                 <button
                   type="button"
@@ -265,7 +265,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   }`}
                 >
                   <Layers className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Info Material</span>
+                  <span className="truncate">Material Info</span>
                 </button>
                 <button
                   type="button"
@@ -280,7 +280,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   }`}
                 >
                   <GitCompareArrows className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Bandingkan</span>
+                  <span className="truncate">Compare</span>
                 </button>
                 <button
                   type="button"
@@ -294,7 +294,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                   }`}
                 >
                   <Database className="w-3.5 h-3.5 shrink-0" />
-                  <span className="truncate">Sumber</span>
+                  <span className="truncate">Sources</span>
                 </button>
               </div>
             </div>
@@ -324,8 +324,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                     inputRef.current?.blur();
                   }
                 }}
-                placeholder="Telusuri situs analog..."
-                aria-label="Telusuri situs analog"
+                placeholder="Search analog sites..."
+                aria-label="Search analog sites"
                 data-testid="search-analog-input"
                 className={`w-full h-8 pl-9 pr-7 rounded-full text-xs focus:outline-none transition-colors ${tokens.input}`}
               />
@@ -333,7 +333,7 @@ export const TopBar: React.FC<TopBarProps> = ({
                 <button
                   type="button"
                   onClick={() => setSearchQuery('')}
-                  aria-label="Hapus pencarian"
+                  aria-label="Clear search"
                   className={`absolute right-2.5 top-1/2 -translate-y-1/2 ${tokens.mutedText}`}
                 >
                   <X className="w-3.5 h-3.5" />
@@ -344,7 +344,7 @@ export const TopBar: React.FC<TopBarProps> = ({
               {searchFocused && searchResults.length > 0 && (
                 <div
                   role="listbox"
-                  aria-label="Hasil pencarian situs analog"
+                  aria-label="Analog site search results"
                   className={`absolute left-0 top-9 w-72 sm:w-80 max-w-[calc(100vw-1.5rem)] py-1.5 z-50 ${tokens.panel}`}
                 >
                   {searchResults.map((site) => (
@@ -386,11 +386,11 @@ export const TopBar: React.FC<TopBarProps> = ({
               <div
                 className={`flex items-center gap-0.5 p-0.5 rounded-lg ${tokens.pillGroup}`}
                 role="group"
-                aria-label="Filter target misi primer"
+                aria-label="Primary mission target filter"
               >
                 {(['All', 'Moon', 'Mars'] as TargetFilter[]).map((f) => {
                   const active = targetFilter === f;
-                  const label = f === 'All' ? 'Semua' : f === 'Moon' ? 'Bulan' : 'Mars';
+                  const label = f === 'All' ? 'All' : f === 'Moon' ? 'Moon' : 'Mars';
                   return (
                     <button
                       key={f}
@@ -411,8 +411,8 @@ export const TopBar: React.FC<TopBarProps> = ({
                 type="button"
                 onClick={() => setFilterInfoOpen((v) => !v)}
                 aria-expanded={filterInfoOpen}
-                aria-label="Penjelasan filter target misi primer"
-                title="Target Misi Primer"
+                aria-label="Primary mission target filter explanation"
+                title="Primary Mission Target"
                 data-testid="filter-info-btn"
                 className={`w-7 h-7 rounded-full flex items-center justify-center transition-colors shrink-0 ${
                   filterInfoOpen ? tokens.accentText : tokens.mutedText
@@ -434,10 +434,10 @@ export const TopBar: React.FC<TopBarProps> = ({
                   }`}
                 >
                   <div className={`font-semibold mb-1 ${tokens.heading}`}>
-                    Filter Target Misi Primer
+                    Primary Mission Target Filter
                   </div>
                   <p className={tokens.bodyText}>
-                    Menyaring situs berdasarkan fokus misi resmi NASA/ESA/USGS (Biru: Bulan, Merah: Mars, Belah: Keduanya). Skor persentase kedua planet tetap dihitung penuh sebagai pembanding.
+                    Filters sites by the official NASA/ESA/USGS mission focus (Blue: Moon, Red: Mars, Split: Both). Percentage scores for both bodies are still fully calculated as a comparison.
                   </p>
                 </div>
               )}

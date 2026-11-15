@@ -132,7 +132,7 @@ function createPinHtml(
   const shortName = isTop ? `${baseName} (Top)` : baseName;
   const label = isCompared ? `[${compareBadge}] ${shortName}` : shortName;
 
-  // Offset Kawah Ijen and Kazumura labels below their pins so neighboring pins never collide at global zoom
+  // Offset Ijen Crater and Kazumura labels below their pins so neighboring pins never collide at global zoom
   const labelBelow =
     (site.id === 'kawah-ijen' || site.id === 'kazumura-lava-tubes') &&
     !isSelected &&
@@ -259,6 +259,11 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
   const cartoonGroupRef = useRef<L.LayerGroup | null>(null);
   const markersLayerRef = useRef<L.LayerGroup | null>(null);
   const lastSeqRef = useRef(-1);
+  const onSelectSiteRef = useRef(onSelectSite);
+
+  useEffect(() => {
+    onSelectSiteRef.current = onSelectSite;
+  }, [onSelectSite]);
 
   useEffect(() => {
     if (!mapContainerRef.current || mapInstanceRef.current) return;
@@ -482,7 +487,7 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       const effectiveScore = getEffectiveSimilarityScore(site, targetFilter);
       const scopeLabel =
         targetFilter === 'Moon'
-          ? 'Bulan'
+          ? 'Moon'
           : targetFilter === 'Mars'
             ? 'Mars'
             : site.targetBody;
@@ -509,12 +514,12 @@ export const LeafletMap: React.FC<LeafletMapProps> = ({
       });
 
       marker.on('click', () => {
-        onSelectSite(site);
+        onSelectSiteRef.current(site);
       });
 
       markersLayer.addLayer(marker);
     });
-  }, [sites, targetFilter, topSiteId, selectedSiteId, compareMode, compareSiteIds, visualStyle, colorTheme, onSelectSite]);
+  }, [sites, targetFilter, topSiteId, selectedSiteId, compareMode, compareSiteIds, visualStyle, colorTheme]);
 
   useEffect(() => {
     const map = mapInstanceRef.current;

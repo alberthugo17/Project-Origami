@@ -64,7 +64,7 @@ test('filterAnalogSites finds Atacama Yungay as top finding and filters by targe
   const bromoSearch = filterAnalogSites(ANALOG_SITES, { query: 'Bromo' });
   assert.equal(bromoSearch.length, 1);
   assert.equal(bromoSearch[0].id, 'gunung-bromo');
-  assert.equal(bromoSearch[0].validationStatus, 'Eksploratif Lokal');
+  assert.equal(bromoSearch[0].validationStatus, 'Local Exploratory');
 
   const moonOnly = filterAnalogSites(ANALOG_SITES, { targetFilter: 'Moon' });
   assert.ok(moonOnly.every((s) => s.targetBody === 'Moon' || s.targetBody === 'Moon & Mars'));
@@ -225,7 +225,7 @@ test('compareSites computes temperature deltas and shared materials across missi
   // Shared cross-site materials must meet >= SUITABLE_MATERIAL_THRESHOLD on both sites
   const ijen = ANALOG_SITES.find((s) => s.id === 'kawah-ijen')!;
   const atacama = ANALOG_SITES.find((s) => s.id === 'atacama-yungay')!;
-  const structureCompare = compareSites(ijen, atacama, 'Struktur & Habitat');
+  const structureCompare = compareSites(ijen, atacama, 'Structures & Habitats');
   assert.ok(!structureCompare.sharedMaterialIds.includes('al-7075-t6'));
   for (const mat of structureCompare.sharedMaterials) {
     assert.ok(scoreMaterialForSite(ijen, mat).score >= SUITABLE_MATERIAL_THRESHOLD);
@@ -233,9 +233,9 @@ test('compareSites computes temperature deltas and shared materials across missi
   }
 
   assert.equal(getMaterialScoreBand(85).label, 'Optimal');
-  assert.equal(getMaterialScoreBand(70).label, 'Layak');
-  assert.equal(getMaterialScoreBand(55).label, 'Terbatas');
-  assert.equal(getMaterialScoreBand(42).label, 'Tidak Disarankan');
+  assert.equal(getMaterialScoreBand(70).label, 'Suitable');
+  assert.equal(getMaterialScoreBand(55).label, 'Limited');
+  assert.equal(getMaterialScoreBand(42).label, 'Not Recommended');
 });
 
 test('material scoring avoids 99% ceiling saturation and penalizes fragile, corrosive, or cold-stiffening weaknesses', () => {
@@ -375,7 +375,7 @@ test('Dallol climate, temperatures, recalibrated scores, references, and compari
   const dallol = ANALOG_SITES.find((s) => s.id === 'dallol-danakil')!;
   const atacama = ANALOG_SITES.find((s) => s.id === 'atacama-yungay')!;
 
-  assert.equal(dallol.fidelityInputs.aridity, 'Hiper-Arid / Beku');
+  assert.equal(dallol.fidelityInputs.aridity, 'Hyper-Arid / Frozen');
   assert.equal(dallol.fidelityInputs.hasActiveLiquidWaterOrRain, true);
   assert.equal(dallol.temperatureProfile.avgC, 34.6);
   assert.equal(dallol.temperatureProfile.minC, 24.6);

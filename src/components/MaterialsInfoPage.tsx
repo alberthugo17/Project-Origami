@@ -26,12 +26,12 @@ interface MaterialsInfoPageProps {
   onBackToMap: () => void;
 }
 
-const CATEGORIES: Array<'Semua' | MaterialCategory> = [
-  'Semua',
+const CATEGORIES: Array<'All' | MaterialCategory> = [
+  'All',
   'Spacesuit & EVA',
-  'Peralatan & Sensor',
-  'Transportasi & Rover',
-  'Struktur & Habitat',
+  'Equipment & Sensors',
+  'Transport & Rovers',
+  'Structures & Habitats',
 ];
 
 export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
@@ -39,10 +39,10 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
   colorTheme,
   initialMaterialId = null,
   initialSiteId = null,
-  backLabel = 'Kembali ke Peta',
+  backLabel = 'Back to Map',
   onBackToMap,
 }) => {
-  const [category, setCategory] = useState<'Semua' | MaterialCategory>('Semua');
+  const [category, setCategory] = useState<'All' | MaterialCategory>('All');
   const [query, setQuery] = useState('');
   const [selectedSiteId, setSelectedSiteId] = useState<string>(() =>
     initialSiteId && ANALOG_SITES.some((s) => s.id === initialSiteId)
@@ -59,7 +59,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
 
   useEffect(() => {
     if (!initialMaterialId) return;
-    setCategory('Semua');
+    setCategory('All');
     setQuery('');
     const timer = window.setTimeout(() => {
       const el = document.querySelector(`[data-testid="material-card-${initialMaterialId}"]`);
@@ -78,7 +78,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return AEROSPACE_MATERIALS.filter((mat) => {
-      if (category !== 'Semua' && mat.category !== category) return false;
+      if (category !== 'All' && mat.category !== category) return false;
       if (!q) return true;
       return [
         mat.name,
@@ -98,7 +98,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
 
   return (
     <section
-      aria-label="Halaman Basis Pengetahuan Info Material"
+      aria-label="Material Info Knowledge Base Page"
       data-testid="materials-info-page"
       className={`w-full h-full overflow-y-auto earth-scroll pt-16 pb-24 transition-colors duration-200 ${tokens.pageCanvas}`}
     >
@@ -118,19 +118,19 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
               </button>
               <div className={`flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
                 <Layers className="w-4 h-4" />
-                <span>Referensi Rekayasa Bahan Spacesuit, Peralatan & Transportasi</span>
+                <span>Engineering Reference for Spacesuit, Equipment & Transport Materials</span>
               </div>
             </div>
             <h1 className={`font-display text-2xl md:text-3xl font-extrabold tracking-tight ${tokens.heading}`}>
-              Basis Pengetahuan{' '}
-              <span className={tokens.highlighter}>Info Material</span> Eksplorasi
+              Exploration{' '}
+              <span className={tokens.highlighter}>Material Info</span> Knowledge Base
             </h1>
             <p className={`text-sm leading-relaxed ${tokens.bodyText}`}>
-              Evaluasi teknis berbobot berdasarkan rentang suhu, ketahanan benturan (impact), abrasi debu, radiasi UV/oksidator, korosi asam, massa, dan peran paparan (eksterior vs internal) mengacu pada data NASA MAPTIS &amp; NTRS.
+              Weighted technical evaluation based on temperature range, impact resistance, dust abrasion, UV/oxidizer radiation, acid corrosion, mass, and exposure role (exterior vs internal), referencing NASA MAPTIS &amp; NTRS data.
             </p>
           </div>
           {tokens.isCartoon && (
-            <CartoonPageStickers colorTheme={colorTheme} badgeText="12 MATERIAL TERUJI" />
+            <CartoonPageStickers colorTheme={colorTheme} badgeText="12 MATERIALS TESTED" />
           )}
         </div>
 
@@ -139,7 +139,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
           <div
             className={`flex flex-wrap items-center gap-1 p-1 rounded-lg ${tokens.pillGroup}`}
             role="tablist"
-            aria-label="Filter kategori material"
+            aria-label="Material category filter"
           >
             {CATEGORIES.map((cat) => {
               const active = category === cat;
@@ -163,13 +163,13 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
           <div className="flex flex-wrap items-center gap-2.5 w-full lg:w-auto">
             <div className="relative">
               <div className="flex items-center gap-2 text-xs">
-                <span className={`whitespace-nowrap ${tokens.mutedText}`}>Simulasi Lokasi:</span>
+                <span className={`whitespace-nowrap ${tokens.mutedText}`}>Simulated Site:</span>
                 <button
                   type="button"
                   onClick={() => setIsSitePopupOpen(!isSitePopupOpen)}
                   aria-expanded={isSitePopupOpen}
                   aria-haspopup="listbox"
-                  aria-label={`Simulasi lokasi: ${activeSite.name}`}
+                  aria-label={`Simulated site: ${activeSite.name}`}
                   data-testid="materials-site-selector"
                   className={`px-3 py-1.5 rounded-lg text-xs focus:outline-none flex items-center justify-between gap-2 max-w-[200px] sm:max-w-[240px] truncate ${tokens.input}`}
                 >
@@ -186,7 +186,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                   />
                   <div className={`absolute right-0 mt-1.5 w-72 max-h-72 overflow-y-auto earth-scroll rounded-xl shadow-2xl z-50 p-1.5 border backdrop-blur-xl ${tokens.panel}`}>
                     <div className="px-2 py-1.5 text-[11px] font-semibold opacity-70 border-b mb-1">
-                      Pilih Lokasi Simulasi ({ANALOG_SITES.length})
+                      Select Simulation Site ({ANALOG_SITES.length})
                     </div>
                     {ANALOG_SITES.map((s) => {
                       const isSelected = s.id === selectedSiteId;
@@ -223,8 +223,8 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                 type="search"
                 value={query}
                 onChange={(e) => setQuery(e.target.value)}
-                placeholder="Cari material, isolator, asam..."
-                aria-label="Cari info material"
+                placeholder="Search materials, insulators, acids..."
+                aria-label="Search material info"
                 className={`w-full pl-8 pr-3 py-1.5 rounded-lg text-xs focus:outline-none ${tokens.input}`}
               />
             </div>
@@ -235,7 +235,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
         <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
           {filtered.length === 0 ? (
             <div className={`col-span-full py-16 text-center text-sm ${tokens.card} ${tokens.mutedText}`}>
-              Tidak ada material yang cocok dengan kata kunci pencarian.
+              No materials match the search keywords.
             </div>
           ) : (
             filtered.map((mat) => {
@@ -265,7 +265,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                       </h2>
                     </div>
                     <div className="text-right shrink-0">
-                      <div className={`text-[10px] ${tokens.mutedText}`}>Skor di lokasi ini</div>
+                      <div className={`text-[10px] ${tokens.mutedText}`}>Score at this site</div>
                       <div className={`font-mono-tabular text-base font-bold ${band.textClass}`}>
                         {fit.score}%
                       </div>
@@ -280,9 +280,9 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                     <div className="flex items-start gap-1.5">
                       <Weight className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${tokens.accentText}`} />
                       <div>
-                        <span className={`block ${tokens.mutedText}`}>Berat & Densitas</span>
+                        <span className={`block ${tokens.mutedText}`}>Weight & Density</span>
                         <span className={`font-mono-tabular font-medium ${tokens.heading}`}>
-                          {mat.weightClass} ({mat.densityKgM3.toLocaleString('id-ID')} kg/m³)
+                          {mat.weightClass} ({mat.densityKgM3.toLocaleString('en-US')} kg/m³)
                         </span>
                         {mat.densityNote && (
                           <span className={`block text-[10px] mt-0.5 ${tokens.mutedText}`}>
@@ -294,16 +294,16 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                     <div className="flex items-start gap-1.5">
                       <Thermometer className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${tokens.accentText}`} />
                       <div>
-                        <span className={`block ${tokens.mutedText}`}>Rentang Suhu Kerja</span>
+                        <span className={`block ${tokens.mutedText}`}>Operating Temperature Range</span>
                         <span className={`font-mono-tabular font-medium ${tokens.heading}`}>
-                          {mat.tempRangeMinC}°C s/d +{mat.tempRangeMaxC}°C
+                          {mat.tempRangeMinC}°C to +{mat.tempRangeMaxC}°C
                         </span>
                       </div>
                     </div>
                     <div className="flex items-start gap-1.5">
                       <Flame className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${tokens.accentText}`} />
                       <div>
-                        <span className={`block ${tokens.mutedText}`}>Sifat Termal</span>
+                        <span className={`block ${tokens.mutedText}`}>Thermal Properties</span>
                         <span className={`font-medium ${tokens.heading}`}>
                           {mat.thermalConductivityType} ({mat.thermalConductivityWmK})
                         </span>
@@ -312,7 +312,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                     <div className="flex items-start gap-1.5">
                       <Zap className={`w-3.5 h-3.5 mt-0.5 shrink-0 ${tokens.accentText}`} />
                       <div>
-                        <span className={`block ${tokens.mutedText}`}>Sifat Listrik</span>
+                        <span className={`block ${tokens.mutedText}`}>Electrical Properties</span>
                         <span className={`font-medium ${tokens.heading}`}>
                           {mat.electricalConductivityType}
                         </span>
@@ -323,43 +323,43 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                   {/* Detailed Characteristics */}
                   <div className="space-y-1.5 text-xs flex-1">
                     <div>
-                      <span className={`font-semibold ${tokens.heading}`}>Kecenderungan: </span>
+                      <span className={`font-semibold ${tokens.heading}`}>Characteristics: </span>
                       <span className={tokens.bodyText}>{mat.tendency}</span>
                     </div>
                     <div>
-                      <span className={`font-semibold ${tokens.heading}`}>Daya Tahan: </span>
+                      <span className={`font-semibold ${tokens.heading}`}>Durability: </span>
                       <span className={tokens.bodyText}>{mat.durability}</span>
                     </div>
                     <div>
-                      <span className={`font-semibold ${tokens.heading}`}>Pengaruh Suhu: </span>
+                      <span className={`font-semibold ${tokens.heading}`}>Temperature Effects: </span>
                       <span className={tokens.bodyText}>{mat.thermalBehaviorNote}</span>
                     </div>
                     <div className="flex flex-wrap items-center gap-x-1.5 gap-y-0.5 pt-0.5">
                       <Shield className={`w-3.5 h-3.5 shrink-0 ${tokens.accentText}`} />
                       <span className={`font-semibold shrink-0 whitespace-nowrap ${tokens.heading}`}>
-                        Ketahanan Asam:
+                        Acid Resistance:
                       </span>
                       <span className={tokens.bodyText}>{mat.acidResistanceLabel}</span>
                     </div>
                     <div className={`flex flex-wrap items-center gap-x-3 gap-y-1 pt-0.5 text-[11px] font-mono-tabular ${tokens.mutedText}`}>
                       <span>Impact: {mat.impactResistanceScore}/5</span>
                       <span aria-hidden="true">·</span>
-                      <span>Abrasi Debu: {mat.dustAbrasionScore}/5</span>
+                      <span>Dust Abrasion: {mat.dustAbrasionScore}/5</span>
                       <span aria-hidden="true">·</span>
-                      <span>UV/Oksidator: {mat.uvOxidationScore}/5</span>
+                      <span>UV/Oxidizer: {mat.uvOxidationScore}/5</span>
                     </div>
                   </div>
 
                   {/* Applications, Site Fit Verdict & Scientific Reference */}
                   <div className={`pt-2 border-t text-[11px] space-y-1.5 ${tokens.divider}`}>
                     <div className={tokens.mutedText}>
-                      Aplikasi: {mat.primaryApplications.join(' · ')}
+                      Applications: {mat.primaryApplications.join(' · ')}
                     </div>
                     <div className={tokens.mutedText}>
-                      Batasan: {mat.limitations}
+                      Limitations: {mat.limitations}
                     </div>
                     <div className={`font-medium ${tokens.accentText}`}>
-                      Analisis {activeSite.name.split('(')[0].trim()}: {fit.reason}
+                      Analysis of {activeSite.name.split('(')[0].trim()}: {fit.reason}
                     </div>
                     <a
                       href={mat.referenceUrl}
@@ -367,7 +367,7 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
                       rel="noopener noreferrer"
                       className={`inline-flex items-center gap-1 pt-0.5 hover:underline ${tokens.accentText}`}
                     >
-                      <span>Sumber: {mat.referenceCitation}</span>
+                      <span>Source: {mat.referenceCitation}</span>
                       <ExternalLink className="w-3 h-3 shrink-0" />
                     </a>
                   </div>
@@ -380,14 +380,14 @@ export const MaterialsInfoPage: React.FC<MaterialsInfoPageProps> = ({
         {/* Bottom Summary Bar */}
         <div className={`p-4 flex flex-wrap items-center justify-between gap-3 ${tokens.card}`}>
           <span className={`text-xs font-mono-tabular ${tokens.mutedText}`}>
-            Menampilkan {filtered.length} dari {AEROSPACE_MATERIALS.length} material terkarakterisasi
+            Showing {filtered.length} of {AEROSPACE_MATERIALS.length} characterized materials
           </span>
           <button
             type="button"
             onClick={onBackToMap}
             className={`px-4 py-2 rounded-lg text-xs transition-colors ${tokens.primaryButton}`}
           >
-            Kembali ke Peta Eksplorasi
+            Back to Exploration Map
           </button>
         </div>
       </div>

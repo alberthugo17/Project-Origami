@@ -12,14 +12,14 @@ interface DataSourcesPageProps {
   onBackToMap: () => void;
 }
 
-const BODY_TABS: DataBodyFilter[] = ['Semua', 'Bumi', 'Bulan', 'Mars'];
+const BODY_TABS: DataBodyFilter[] = ['All', 'Earth', 'Moon', 'Mars'];
 
 export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
   visualStyle,
   colorTheme,
   onBackToMap,
 }) => {
-  const [bodyFilter, setBodyFilter] = useState<DataBodyFilter>('Semua');
+  const [bodyFilter, setBodyFilter] = useState<DataBodyFilter>('All');
   const [query, setQuery] = useState('');
   const tokens = getThemeTokens(visualStyle, colorTheme);
 
@@ -30,7 +30,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
 
   return (
     <section
-      aria-label="Halaman Sumber Data dan Metodologi Analisis"
+      aria-label="Data Sources and Analysis Methodology Page"
       data-testid="data-sources-page"
       className={`w-full h-full overflow-y-auto earth-scroll pt-16 pb-24 transition-colors duration-200 ${tokens.pageCanvas}`}
     >
@@ -45,12 +45,12 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
               className={`order-1 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors shrink-0 ${tokens.secondaryButton}`}
             >
               <ArrowLeft className="w-3.5 h-3.5" />
-              <span>Kembali ke Peta</span>
+              <span>Back to Map</span>
             </button>
 
             <div className={`order-3 md:order-2 w-full md:w-auto md:mr-auto flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
               <Database className="w-4 h-4 shrink-0" />
-              <span>Inventaris Data Terbuka Bumi, Bulan & Mars</span>
+              <span>Open Data Inventory of Earth, Moon & Mars</span>
             </div>
 
             <a
@@ -61,28 +61,28 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
               className={`order-2 md:order-3 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 ${tokens.primaryButton}`}
             >
               <FileText className="w-3.5 h-3.5" />
-              <span>Analisis Data</span>
+              <span>Data Analysis</span>
             </a>
           </div>
 
           <div className="flex flex-wrap items-start justify-between gap-4">
             <div className="space-y-2 max-w-3xl">
               <h1 className={`font-display text-2xl md:text-3xl font-extrabold tracking-tight ${tokens.heading}`}>
-                Sumber Informasi & <span className={tokens.highlighter}>Dataset Analisis</span>
+                Information Sources & <span className={tokens.highlighter}>Analysis Datasets</span>
               </h1>
               <p className={`text-sm leading-relaxed ${tokens.bodyText}`}>
-                Karakterisasi {ANALOG_SITES.length} situs analog menggunakan data penginderaan jauh terbuka dari NASA, ESA, USGS Astrogeology, JAXA, serta BIG/PVMBG Indonesia.
+                Characterization of {ANALOG_SITES.length} analog sites using open remote sensing data from NASA, ESA, USGS Astrogeology, JAXA, and Indonesia's BIG/PVMBG.
               </p>
             </div>
             {tokens.isCartoon && (
-              <CartoonPageStickers colorTheme={colorTheme} badgeText="DATA TERBUKA NASA/ESA" />
+              <CartoonPageStickers colorTheme={colorTheme} badgeText="NASA/ESA OPEN DATA" />
             )}
           </div>
         </div>
 
         {/* Filter & Search Toolbar */}
         <div className={`p-4 flex flex-wrap items-center justify-between gap-3 ${tokens.card}`}>
-          <div className={`flex items-center gap-1 p-1 rounded-lg ${tokens.pillGroup}`} role="tablist" aria-label="Filter objek langit">
+          <div className={`flex items-center gap-1 p-1 rounded-lg ${tokens.pillGroup}`} role="tablist" aria-label="Celestial body filter">
             {BODY_TABS.map((tab) => {
               const active = bodyFilter === tab;
               return (
@@ -108,8 +108,8 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
               type="search"
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              placeholder="Cari misi, instrumen, agensi..."
-              aria-label="Cari sumber data"
+              placeholder="Search missions, instruments, agencies..."
+              aria-label="Search data sources"
               className={`w-full pl-8 pr-3 py-1.5 rounded-lg text-xs focus:outline-none ${tokens.input}`}
             />
           </div>
@@ -118,21 +118,21 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
         {/* Methodology Strip */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-xs">
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`font-semibold text-sm ${tokens.accentText}`}>1. Morfometri & Topografi</div>
+            <div className={`font-semibold text-sm ${tokens.accentText}`}>1. Morphometry & Topography</div>
             <p className={`mt-1.5 leading-relaxed ${tokens.bodyText}`}>
-              Gradien lereng dan kekasaran terrain dibandingkan antara SRTM 30m / ASTER GDEM / DEMNAS 8m (serta ArcticDEM 2m untuk lintang &gt;60°LU) dengan LRO LOLA (Bulan) dan HiRISE DTM (Mars).
+              Slope gradients and terrain roughness are compared between SRTM 30m / ASTER GDEM / DEMNAS 8m (plus ArcticDEM 2m for latitudes &gt;60°N) and LRO LOLA (Moon) and HiRISE DTM (Mars).
             </p>
           </div>
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`font-semibold text-sm ${tokens.accentText}`}>2. Spektroskopi & Mineralogi</div>
+            <div className={`font-semibold text-sm ${tokens.accentText}`}>2. Spectroscopy & Mineralogy</div>
             <p className={`mt-1.5 leading-relaxed ${tokens.bodyText}`}>
-              Pita reflektansi VNIR/SWIR dari Sentinel-2 MSI dicocokkan terhadap spektrum mineral basaltik, sulfat, dan karbonat MRO CRISM serta JAXA MI.
+              VNIR/SWIR reflectance bands from Sentinel-2 MSI are matched against the basaltic, sulfate, and carbonate mineral spectra of MRO CRISM and JAXA MI.
             </p>
           </div>
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`font-semibold text-sm ${tokens.accentText}`}>3. Albedo, Suhu & Ariditas</div>
+            <div className={`font-semibold text-sm ${tokens.accentText}`}>3. Albedo, Temperature & Aridity</div>
             <p className={`mt-1.5 leading-relaxed ${tokens.bodyText}`}>
-              Albedo & suhu MODIS LST disaring terhadap inersia termal THEMIS untuk validasi zona regolith dan kecocokan material misi.
+              MODIS LST albedo & temperature are filtered against THEMIS thermal inertia to validate regolith zones and mission material suitability.
             </p>
           </div>
         </div>
@@ -141,7 +141,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
         <div className="space-y-3">
           {filtered.length === 0 ? (
             <div className={`py-14 text-center text-sm ${tokens.card} ${tokens.mutedText}`}>
-              Tidak ada dataset yang cocok dengan filter pencarian.
+              No datasets match the search filter.
             </div>
           ) : (
             filtered.map((src) => (
@@ -154,7 +154,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                     <div className={`flex items-center gap-2 text-xs flex-wrap ${tokens.mutedText}`}>
                       <span className={`font-semibold ${tokens.accentText}`}>{src.agency}</span>
                       <span aria-hidden="true">·</span>
-                      <span>Objek: {src.targetBody}</span>
+                      <span>Body: {src.targetBody}</span>
                       <span aria-hidden="true">·</span>
                       <span className="font-mono-tabular">{src.resolution}</span>
                     </div>
@@ -168,31 +168,31 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                     rel="noopener noreferrer"
                     className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 self-start ${tokens.secondaryButton}`}
                   >
-                    Portal Resmi
+                    Official Portal
                     <ExternalLink className="w-3.5 h-3.5" />
                   </a>
                 </div>
 
                 <div className="mt-3 grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
                   <div>
-                    <span className={`block text-[11px] font-medium ${tokens.mutedText}`}>Variabel Diekstrak</span>
+                    <span className={`block text-[11px] font-medium ${tokens.mutedText}`}>Extracted Variables</span>
                     <p className={`mt-0.5 leading-relaxed ${tokens.bodyText}`}>{src.variablesExtracted}</p>
                   </div>
                   <div>
-                    <span className={`block text-[11px] font-medium ${tokens.mutedText}`}>Peran dalam Analisis Analog</span>
+                    <span className={`block text-[11px] font-medium ${tokens.mutedText}`}>Role in Analog Analysis</span>
                     <p className={`mt-0.5 leading-relaxed ${tokens.bodyText}`}>{src.roleInAnalysis}</p>
                   </div>
                 </div>
 
                 <div className={`mt-3 pt-2.5 border-t flex flex-wrap items-center justify-between gap-2 text-[11px] ${tokens.divider} ${tokens.mutedText}`}>
-                  <span className="font-mono-tabular">ID Dataset: {src.datasetIdentifier}</span>
+                  <span className="font-mono-tabular">Dataset ID: {src.datasetIdentifier}</span>
                   <a
                     href={src.referenceUrl}
                     target="_blank"
                     rel="noopener noreferrer"
                     className={`inline-flex items-center gap-1 hover:underline ${tokens.accentText}`}
                   >
-                    <span>Referensi: {src.scientificReference}</span>
+                    <span>Reference: {src.scientificReference}</span>
                     <ExternalLink className="w-3 h-3 shrink-0" />
                   </a>
                 </div>
@@ -204,14 +204,14 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
         {/* Footer */}
         <div className={`p-4 flex flex-wrap items-center justify-between gap-3 ${tokens.card}`}>
           <span className={`text-xs font-mono-tabular ${tokens.mutedText}`}>
-            Menampilkan {filtered.length} dari {DATA_SOURCES.length} sumber data agensi antariksa & kebumian
+            Showing {filtered.length} of {DATA_SOURCES.length} space agency & earth science data sources
           </span>
           <button
             type="button"
             onClick={onBackToMap}
             className={`px-4 py-2 rounded-lg text-xs transition-colors ${tokens.primaryButton}`}
           >
-            Kembali ke Peta Eksplorasi
+            Back to Exploration Map
           </button>
         </div>
       </div>

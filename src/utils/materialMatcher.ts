@@ -14,7 +14,7 @@ export interface MaterialRecommendation {
 export const SUITABLE_MATERIAL_THRESHOLD = 65;
 
 export interface MaterialScoreBand {
-  label: 'Optimal' | 'Layak' | 'Terbatas' | 'Tidak Disarankan';
+  label: 'Optimal' | 'Suitable' | 'Limited' | 'Not Recommended';
   textClass: string;
 }
 
@@ -23,12 +23,12 @@ export function getMaterialScoreBand(score: number): MaterialScoreBand {
     return { label: 'Optimal', textClass: 'text-emerald-600 dark:text-emerald-400' };
   }
   if (score >= SUITABLE_MATERIAL_THRESHOLD) {
-    return { label: 'Layak', textClass: 'text-sky-600 dark:text-sky-400' };
+    return { label: 'Suitable', textClass: 'text-sky-600 dark:text-sky-400' };
   }
   if (score >= 50) {
-    return { label: 'Terbatas', textClass: 'text-amber-600 dark:text-amber-400' };
+    return { label: 'Limited', textClass: 'text-amber-600 dark:text-amber-400' };
   }
-  return { label: 'Tidak Disarankan', textClass: 'text-rose-600 dark:text-rose-400' };
+  return { label: 'Not Recommended', textClass: 'text-rose-600 dark:text-rose-400' };
 }
 
 export interface SiteComparisonResult {
@@ -46,29 +46,29 @@ export interface SiteComparisonResult {
 
 function getRoleForSite(site: AnalogSite, material: AerospaceMaterial): string {
   if (material.category === 'Spacesuit & EVA') {
-    if (material.exposureRole === 'Komponen Terlindung / Internal') {
-      return 'Lapisan Insulasi Internal Spacesuit / Rover';
+    if (material.exposureRole === 'Shielded / Internal Component') {
+      return 'Internal Spacesuit / Rover Insulation Layer';
     }
     return site.biome === 'Hydrothermal'
-      ? 'Pelindung Luar Baju & Segel Anti-Asam'
-      : 'Lapisan Luar Spacesuit EVA (TMG)';
+      ? 'Suit Outer Shield & Acid-Proof Seals'
+      : 'Outer Layer of EVA Spacesuit (TMG)';
   }
-  if (material.category === 'Transportasi & Rover') {
+  if (material.category === 'Transport & Rovers') {
     return site.biome === 'Volcanic' || site.biome === 'Impact Crater'
-      ? 'Sasis, Suspensi & Roda Medan Ekstrem'
-      : 'Struktur Transportasi & Mobilitas';
+      ? 'Chassis, Suspension & Extreme-Terrain Wheels'
+      : 'Transport & Mobility Structure';
   }
-  if (material.category === 'Peralatan & Sensor') {
-    if (material.exposureRole === 'Optik & Sensor Kritis') {
-      return 'Jendela Optik Kamera & Pelindung Visor';
+  if (material.category === 'Equipment & Sensors') {
+    if (material.exposureRole === 'Optics & Critical Sensors') {
+      return 'Camera Optical Window & Visor Shield';
     }
     return site.biome === 'Hydrothermal'
-      ? 'Probe Sampling & Sensor Tahan Korosi'
-      : 'Peralatan Bor, Segel & Komponen Instrumen';
+      ? 'Sampling Probes & Corrosion-Resistant Sensors'
+      : 'Drilling Equipment, Seals & Instrument Components';
   }
-  return material.exposureRole === 'Komponen Terlindung / Internal'
-    ? 'Lapisan Tekanan Habitat (Terlindung Luar)'
-    : 'Struktur Utama & Pelindung Habitat';
+  return material.exposureRole === 'Shielded / Internal Component'
+    ? 'Habitat Pressure Layer (Shielded from Exterior)'
+    : 'Main Structure & Habitat Shield';
 }
 
 /**
@@ -86,7 +86,7 @@ export function scoreMaterialForSite(
   const { minC, maxC, avgC } = site.temperatureProfile;
   const { acidityPh, roughness } = site.terrainProfile;
   const swing = Math.round((maxC - minC) * 10) / 10;
-  const isRugged = roughness.includes('Tinggi');
+  const isRugged = roughness.includes('High');
   const isAcidic = acidityPh < 4.5 || site.biome === 'Hydrothermal';
   const isHyperAcidic = acidityPh < 2.5;
   const isDesert = site.biome === 'Desert';
@@ -108,32 +108,32 @@ export function scoreMaterialForSite(
     // Out of operating envelope
     const violation = Math.abs(Math.min(coldMargin, hotMargin));
     thermalPts = Math.max(-28, -14 - violation * 0.6);
-    warningReasons.push(`melewati batas suhu aman (${material.tempRangeMinC}°C..${material.tempRangeMaxC}°C)`);
+    warningReasons.push(`exceeds safe temperature limits (${material.tempRangeMinC}°C..${material.tempRangeMaxC}°C)`);
   } else {
     // Base thermal fit + safety margin bonus (capped at +8)
     thermalPts += 10 + Math.min(8, Math.round(minMargin / 15));
     if (minMargin < 12) {
       thermalPts -= 7;
-      warningReasons.push(`margin suhu sempit (batas kerja ${material.tempRangeMinC}°C..${material.tempRangeMaxC}°C)`);
+      warningReasons.push(`narrow temperature margin (operating limit ${material.tempRangeMinC}°C..${material.tempRangeMaxC}°C)`);
     } else {
-      positiveReasons.push(`margin suhu aman di ${minC}°C s/d ${maxC}°C`);
+      positiveReasons.push(`safe temperature margin at ${minC}°C to ${maxC}°C`);
     }
 
     if (isCold) {
       thermalPts += (material.cryogenicScore - 2) * 1.8;
       if (material.cryogenicScore >= 5) {
-        positiveReasons.push('stabil di suhu dingin/kriogenik');
+        positiveReasons.push('stable in cold/cryogenic temperatures');
       }
     }
     if (maxC >= 32) {
       thermalPts += (material.heatScore - 2) * 1.5;
-      if (material.thermalConductivityType === 'Konduktor Termal') {
+      if (material.thermalConductivityType === 'Thermal Conductor') {
         thermalPts += 2;
       }
     }
-    if (swing >= 18 && material.thermalConductivityType === 'Isolator Termal') {
+    if (swing >= 18 && material.thermalConductivityType === 'Thermal Insulator') {
       thermalPts += 4;
-      positiveReasons.push(`isolator untuk ayunan diurnal ${swing}°C`);
+      positiveReasons.push(`insulator for a ${swing}°C diurnal swing`);
     }
   }
 
@@ -149,18 +149,18 @@ export function scoreMaterialForSite(
     // Severe penalty for fragile films or low-abrasion shells on abrasive sites
     if (material.dustAbrasionScore <= 2) {
       mechanicalPts -= 14;
-      warningReasons.push('rentan goresan debu/pasir tajam (butuh pelindung luar)');
+      warningReasons.push('vulnerable to scratching by sharp dust/sand (needs an outer shield)');
     }
     if (material.impactResistanceScore <= 2 && isRugged) {
       mechanicalPts -= 10;
-      warningReasons.push('rapuh terhadap benturan batu curam & kasar');
+      warningReasons.push('brittle against impacts from steep & rough rocks');
     } else if (material.impactResistanceScore <= 1) {
       mechanicalPts -= 10;
-      warningReasons.push('film tipis rentan sobek benturan luar');
+      warningReasons.push('thin film is prone to tearing from external impacts');
     }
 
     if (material.dustAbrasionScore >= 4 && material.impactResistanceScore >= 4) {
-      positiveReasons.push('tangguh abrasi debu & benturan batuan');
+      positiveReasons.push('tough against dust abrasion & rock impacts');
     }
 
     // Realism adjustment from NASA ICES-2026: open-weave Orthofabric retains sharp tephra/lunar dust
@@ -179,12 +179,12 @@ export function scoreMaterialForSite(
     chemicalPts += material.acidResistanceScore * 4.2;
     if (material.acidResistanceScore <= 2) {
       chemicalPts -= isHyperAcidic ? 28 : 20;
-      warningReasons.push(`tidak aman terhadap korosi asam (pH ${acidityPh})`);
+      warningReasons.push(`unsafe against acid corrosion (pH ${acidityPh})`);
     } else if (material.acidResistanceScore === 3) {
       chemicalPts -= isHyperAcidic ? 12 : 6;
-      warningReasons.push('ketahanan asam terbatas tanpa lapisan luar');
+      warningReasons.push('limited acid resistance without an outer coating');
     } else if (material.acidResistanceScore >= 5) {
-      positiveReasons.push(`tahan korosi asam ekstrem (pH ${acidityPh})`);
+      positiveReasons.push(`resistant to extreme acid corrosion (pH ${acidityPh})`);
     }
   } else {
     chemicalPts += material.acidResistanceScore * 1.6 + material.uvOxidationScore * 2.6;
@@ -193,13 +193,13 @@ export function scoreMaterialForSite(
     if (isDesert || site.elevationM >= 2000) {
       if (material.uvOxidationScore <= 2) {
         chemicalPts -= 10;
-        warningReasons.push('terdegradasi radiasi UV langsung tanpa pelapis luar');
+        warningReasons.push('degraded by direct UV radiation without an outer coating');
       } else if (material.uvOxidationScore >= 5) {
-        positiveReasons.push('inert terhadap UV & oksidator/garam');
+        positiveReasons.push('inert to UV & oxidizers/salt');
       }
       if (material.id === 'al-7075-t6' && isDesert) {
         chemicalPts -= 5;
-        warningReasons.push('perlu anodisasi terhadap kerak garam klorida');
+        warningReasons.push('needs anodizing against chloride salt crusts');
       }
     }
   }
@@ -210,25 +210,25 @@ export function scoreMaterialForSite(
   let operationalPts = 0;
 
   // Weight efficiency
-  if (material.weightClass === 'Sangat Ringan') operationalPts += 10;
-  else if (material.weightClass === 'Ringan') operationalPts += 8.5;
-  else if (material.weightClass === 'Sedang') operationalPts += 5.5;
+  if (material.weightClass === 'Very Light') operationalPts += 10;
+  else if (material.weightClass === 'Light') operationalPts += 8.5;
+  else if (material.weightClass === 'Medium') operationalPts += 5.5;
   else {
     // Heavy alloy (e.g., Hastelloy 8890 kg/m3) penalized for mobility/high-elevation unless hyper-acidic probe
     operationalPts += isHyperAcidic ? 3 : -4;
     if (!isHyperAcidic) {
-      warningReasons.push('bobot jenis berat membatasi mobilitas struktur');
+      warningReasons.push('heavy specific weight limits structural mobility');
     }
   }
 
-  if (site.elevationM >= 2000 && (material.weightClass === 'Sangat Ringan' || material.weightClass === 'Ringan')) {
+  if (site.elevationM >= 2000 && (material.weightClass === 'Very Light' || material.weightClass === 'Light')) {
     operationalPts += 2.5;
   }
 
   // Exposure readiness: exterior-rated hardware scores higher as primary field-ready material
-  if (material.exposureRole === 'Pelindung Luar Langsung') {
+  if (material.exposureRole === 'Direct Exterior Shield') {
     operationalPts += 8;
-  } else if (material.exposureRole === 'Optik & Sensor Kritis') {
+  } else if (material.exposureRole === 'Optics & Critical Sensors') {
     operationalPts += 5;
   } else {
     // Internal / shielded layers (Kapton MLI, Aerogel, Vectran, FVMQ) rely on outer shell protection
@@ -238,16 +238,16 @@ export function scoreMaterialForSite(
   // Domain-specific physical adjustments
   if (site.biome === 'Cave / Lava Tube' && material.id === 'kevlar-vectran-bladder') {
     operationalPts += 8;
-    positiveReasons.push('optimal untuk modul habitat tiup dalam tabung lava');
+    positiveReasons.push('optimal for inflatable habitat modules in lava tubes');
   }
   if (material.id === 'nitinol-spring-tire') {
     if (isVolcanicOrCrater || isDesert) {
       operationalPts += 5;
-      positiveReasons.push('roda pegas superelastis unggul di medan batuan/pasir');
+      positiveReasons.push('superelastic spring wheel excels on rocky/sandy terrain');
     }
     if (minC <= -35) {
       operationalPts -= 12;
-      warningReasons.push('superelastisitas Nitinol kaku di bawah -40°C');
+      warningReasons.push('Nitinol superelasticity stiffens below -40°C');
     }
   }
   if (material.id === 'cfrp-peek-composite' && isRugged && isVolcanicOrCrater) {
@@ -265,10 +265,10 @@ export function scoreMaterialForSite(
     reasonText = warns.join('; ').replace(/^[a-z]/, (c) => c.toUpperCase()) + '.';
   } else if (positiveReasons.length > 0) {
     const pos = Array.from(new Set(positiveReasons)).slice(0, 2);
-    const warnSuffix = warningReasons.length > 0 ? ` (Catatan: ${warningReasons[0]})` : '';
+    const warnSuffix = warningReasons.length > 0 ? ` (Note: ${warningReasons[0]})` : '';
     reasonText = pos.join('; ').replace(/^[a-z]/, (c) => c.toUpperCase()) + '.' + warnSuffix;
   } else {
-    reasonText = `Sesuai untuk fungsi ${material.exposureRole.toLowerCase()} pada suhu rata-rata ${avgC}°C.`;
+    reasonText = `Suitable for the ${material.exposureRole.toLowerCase()} role at an average temperature of ${avgC}°C.`;
   }
 
   return { score: clampedScore, reason: reasonText };
@@ -343,28 +343,28 @@ export function compareSites(
 
   let scoreA = siteA.similarityScore;
   let scoreB = siteB.similarityScore;
-  let scoreScopeLabel = 'skor analog terkalibrasi';
+  let scoreScopeLabel = 'calibrated analog score';
 
   if (bothMoon && !bothMars) {
     scoreA = siteA.moonSimilarityScore;
     scoreB = siteB.moonSimilarityScore;
-    scoreScopeLabel = 'kecocokan Bulan';
+    scoreScopeLabel = 'Moon similarity';
   } else if (bothMars && !bothMoon) {
     scoreA = siteA.marsSimilarityScore;
     scoreB = siteB.marsSimilarityScore;
-    scoreScopeLabel = 'kecocokan Mars';
+    scoreScopeLabel = 'Mars similarity';
   }
 
   const betterMatch = scoreA >= scoreB ? siteA.name : siteB.name;
   const betterScore = Math.max(scoreA, scoreB).toFixed(1);
 
   const needLabel =
-    need === 'all' ? 'keseluruhan misi' : need;
+    need === 'all' ? 'overall mission' : need;
 
   const summaryVerdict =
     sharedMaterials.length > 0
-      ? `Untuk kebutuhan ${needLabel}, ${betterMatch} unggul pada ${scoreScopeLabel} (${betterScore}%) sementara ${sharedMaterials.length} material inti (seperti ${sharedMaterials[0].name}) memenuhi ambang layak (≥${SUITABLE_MATERIAL_THRESHOLD}%) di kedua lokasi meski selisih suhu rata-rata ${tempDeltaAvgC}°C.`
-      : `Untuk kebutuhan ${needLabel}, ${betterMatch} unggul pada ${scoreScopeLabel} (${betterScore}%), namun tidak ada satu material pun yang mencapai ambang layak (≥${SUITABLE_MATERIAL_THRESHOLD}%) di kedua lokasi sekaligus akibat perbedaan ekstrem suhu (${tempDeltaAvgC}°C), kimia permukaan, dan terrain.`;
+      ? `For ${needLabel} needs, ${betterMatch} leads in ${scoreScopeLabel} (${betterScore}%) while ${sharedMaterials.length} core material(s) (such as ${sharedMaterials[0].name}) meet the suitability threshold (≥${SUITABLE_MATERIAL_THRESHOLD}%) at both sites despite an average temperature difference of ${tempDeltaAvgC}°C.`
+      : `For ${needLabel} needs, ${betterMatch} leads in ${scoreScopeLabel} (${betterScore}%), but no single material reaches the suitability threshold (≥${SUITABLE_MATERIAL_THRESHOLD}%) at both sites at once due to extreme differences in temperature (${tempDeltaAvgC}°C), surface chemistry, and terrain.`;
 
   return {
     siteA,

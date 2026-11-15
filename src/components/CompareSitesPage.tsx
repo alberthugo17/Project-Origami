@@ -26,9 +26,9 @@ interface CompareSitesPageProps {
 }
 
 function getPrimaryTargetLabel(targetBody: TargetBody): string {
-  if (targetBody === 'Moon') return 'Target Primer: 🌙 Bulan';
-  if (targetBody === 'Mars') return 'Target Primer: 🪐 Mars';
-  return 'Target Ganda: 🌙 Bulan & 🪐 Mars';
+  if (targetBody === 'Moon') return 'Primary Target: 🌙 Moon';
+  if (targetBody === 'Mars') return 'Primary Target: 🪐 Mars';
+  return 'Dual Target: 🌙 Moon & 🪐 Mars';
 }
 
 function getComponentPrimaryDisplay(
@@ -55,11 +55,11 @@ function getComponentPrimaryDisplay(
 }
 
 const NEED_OPTIONS: Array<{ id: ComparisonNeed; label: string }> = [
-  { id: 'all', label: 'Semua Kebutuhan Misi' },
+  { id: 'all', label: 'All Mission Needs' },
   { id: 'Spacesuit & EVA', label: 'Spacesuit & EVA' },
-  { id: 'Transportasi & Rover', label: 'Transportasi & Rover' },
-  { id: 'Peralatan & Sensor', label: 'Peralatan & Sensor' },
-  { id: 'Struktur & Habitat', label: 'Struktur & Habitat' },
+  { id: 'Transport & Rovers', label: 'Transport & Rovers' },
+  { id: 'Equipment & Sensors', label: 'Equipment & Sensors' },
+  { id: 'Structures & Habitats', label: 'Structures & Habitats' },
 ];
 
 export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
@@ -81,7 +81,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
 
   return (
     <section
-      aria-label="Halaman Perbandingan Dua Lokasi Analog"
+      aria-label="Two Analog Sites Comparison Page"
       data-testid="compare-sites-page"
       className={`w-full h-full overflow-y-auto earth-scroll pt-16 pb-24 transition-colors duration-200 ${tokens.pageCanvas}`}
     >
@@ -97,11 +97,11 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                 className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors ${tokens.secondaryButton}`}
               >
                 <ArrowLeft className="w-3.5 h-3.5" />
-                <span>Kembali ke Peta</span>
+                <span>Back to Map</span>
               </button>
               <div className={`flex items-center gap-1.5 text-xs font-medium ${tokens.accentText}`}>
                 <GitCompareArrows className="w-4 h-4" />
-                <span>Analisis Komparatif Lintas Situs Analog</span>
+                <span>Cross-Site Comparative Analysis of Analog Sites</span>
               </div>
             </div>
             <h1 className={`font-display text-2xl md:text-3xl font-extrabold tracking-tight ${tokens.heading}`}>
@@ -112,14 +112,14 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
             </p>
           </div>
           {tokens.isCartoon && (
-            <CartoonPageStickers colorTheme={colorTheme} badgeText="PERBANDINGAN A vs B" />
+            <CartoonPageStickers colorTheme={colorTheme} badgeText="COMPARISON A vs B" />
           )}
         </div>
 
         {/* Mission Need Filter Bar */}
         <div className={`p-4 flex flex-wrap items-center justify-between gap-3 ${tokens.card}`}>
           <div className="flex flex-wrap items-center gap-2">
-            <span className={`text-xs font-semibold ${tokens.mutedText}`}>Kebutuhan Pengujian:</span>
+            <span className={`text-xs font-semibold ${tokens.mutedText}`}>Testing Needs:</span>
             <div className={`flex flex-wrap items-center gap-1 p-1 rounded-lg ${tokens.pillGroup}`}>
               {NEED_OPTIONS.map((opt) => {
                 const active = need === opt.id;
@@ -146,14 +146,14 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
             className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-lg text-xs transition-colors whitespace-nowrap ${tokens.secondaryButton}`}
           >
             <RefreshCw className="w-3.5 h-3.5" />
-            <span>Pilih Ulang 2 Lokasi di Peta</span>
+            <span>Re-pick 2 Sites on the Map</span>
           </button>
         </div>
 
         {/* Quick Delta KPI Strip */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`text-xs ${tokens.mutedText}`}>Selisih Suhu Rata-Rata</div>
+            <div className={`text-xs ${tokens.mutedText}`}>Average Temperature Difference</div>
             <div className={`text-2xl font-mono-tabular font-bold mt-1 ${tokens.heading}`}>
               Δ {comparison.tempDeltaAvgC}°C
             </div>
@@ -162,23 +162,23 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
             </div>
           </div>
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`text-xs ${tokens.mutedText}`}>Ayunan Suhu Terlebar</div>
+            <div className={`text-xs ${tokens.mutedText}`}>Widest Temperature Swing</div>
             <div className={`text-2xl font-mono-tabular font-bold mt-1 ${tokens.heading}`}>
               {comparison.tempDeltaMaxSwingC}°C
             </div>
             <div className={`text-xs mt-0.5 ${tokens.mutedText}`}>
-              Perlu kompensasi isolator/konduktor termal
+              Requires thermal insulator/conductor compensation
             </div>
           </div>
           <div className={`p-4 ${tokens.card}`}>
-            <div className={`text-xs ${tokens.mutedText}`}>Material Cocok Lintas Situs</div>
+            <div className={`text-xs ${tokens.mutedText}`}>Materials Suitable Across Sites</div>
             <div className={`text-2xl font-mono-tabular font-bold mt-1 ${tokens.accentText}`}>
-              {comparison.sharedMaterials.length} Material
+              {comparison.sharedMaterials.length} {comparison.sharedMaterials.length === 1 ? 'Material' : 'Materials'}
             </div>
             <div className={`text-xs mt-0.5 truncate ${tokens.mutedText}`}>
               {comparison.sharedMaterials.length > 0
                 ? comparison.sharedMaterials.map((m) => m.name.split('(')[0].trim()).join(', ')
-                : 'Butuh paket material spesifik lokasi'}
+                : 'Needs a site-specific material package'}
             </div>
           </div>
         </div>
@@ -188,11 +188,11 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
           <div className="flex flex-wrap items-center justify-between gap-2">
             <h2 className={`font-display text-sm md:text-base font-bold flex items-center gap-2 ${tokens.heading}`}>
               <BarChart3 className={`w-4 h-4 ${tokens.accentText}`} />
-              <span>Matriks Perbandingan 4 Komponen Skor Analog</span>
+              <span>4-Component Analog Score Comparison Matrix</span>
             </h2>
             {siteA.targetBody !== siteB.targetBody && (
               <span className={`text-[11px] font-medium px-2.5 py-1 rounded-md ${tokens.subCard} ${tokens.mutedText}`}>
-                Perbandingan lintas target: {getPrimaryTargetLabel(siteA.targetBody)} vs {getPrimaryTargetLabel(siteB.targetBody)}
+                Cross-target comparison: {getPrimaryTargetLabel(siteA.targetBody)} vs {getPrimaryTargetLabel(siteB.targetBody)}
               </span>
             )}
           </div>
@@ -201,15 +201,15 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
             <table className="w-full text-left border-collapse text-xs">
               <thead>
                 <tr className={`border-b ${tokens.divider}`}>
-                  <th className={`py-2 pr-3 font-semibold ${tokens.mutedText}`}>Komponen Skor</th>
+                  <th className={`py-2 pr-3 font-semibold ${tokens.mutedText}`}>Score Component</th>
                   <th className={`py-2 px-3 font-semibold ${tokens.heading}`}>
-                    <div>Lokasi A · {siteA.name.split('(')[0].trim()}</div>
+                    <div>Site A · {siteA.name.split('(')[0].trim()}</div>
                     <div className={`text-[11px] font-medium ${tokens.accentText}`}>
                       {getPrimaryTargetLabel(siteA.targetBody)} ({siteA.similarityScore.toFixed(1)}%)
                     </div>
                   </th>
                   <th className={`py-2 pl-3 font-semibold ${tokens.heading}`}>
-                    <div>Lokasi B · {siteB.name.split('(')[0].trim()}</div>
+                    <div>Site B · {siteB.name.split('(')[0].trim()}</div>
                     <div className={`text-[11px] font-medium ${tokens.accentText}`}>
                       {getPrimaryTargetLabel(siteB.targetBody)} ({siteB.similarityScore.toFixed(1)}%)
                     </div>
@@ -253,8 +253,8 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
         {/* Two-Column Side-by-Side Comparison */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 items-stretch">
           {[
-            { label: 'Lokasi A', site: siteA, recs: comparison.topMaterialsA },
-            { label: 'Lokasi B', site: siteB, recs: comparison.topMaterialsB },
+            { label: 'Site A', site: siteA, recs: comparison.topMaterialsA },
+            { label: 'Site B', site: siteB, recs: comparison.topMaterialsB },
           ].map(({ label, site, recs }) => (
             <div key={site.id} className={`p-5 flex flex-col gap-4 ${tokens.card}`}>
               {/* Site Header */}
@@ -271,7 +271,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                           : tokens.mutedText
                       }
                     >
-                      🌙 Bulan: {site.moonSimilarityScore.toFixed(1)}%
+                      🌙 Moon: {site.moonSimilarityScore.toFixed(1)}%
                     </span>
                     <span aria-hidden="true" className={tokens.mutedText}>·</span>
                     <span
@@ -289,7 +289,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                   {site.name}
                 </h2>
                 <p className={`text-xs ${tokens.mutedText}`}>
-                  {site.region}, {site.country} · {site.elevationM.toLocaleString('id-ID')} m mdpl
+                  {site.region}, {site.country} · {site.elevationM.toLocaleString('en-US')} m a.s.l.
                 </p>
               </div>
 
@@ -297,10 +297,10 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
               <div className={`p-3.5 space-y-1 ${tokens.subCard}`}>
                 <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
                   <Thermometer className="w-3.5 h-3.5" />
-                  Temperatur Terdeteksi
+                  Detected Temperature
                 </div>
                 <div className={`text-xs font-mono-tabular font-medium ${tokens.heading}`}>
-                  Rata-rata {site.temperatureProfile.avgC}°C (Min {site.temperatureProfile.minC}°C / Maks {site.temperatureProfile.maxC}°C)
+                  Average {site.temperatureProfile.avgC}°C (Min {site.temperatureProfile.minC}°C / Max {site.temperatureProfile.maxC}°C)
                 </div>
                 <p className={`text-xs leading-relaxed ${tokens.bodyText}`}>
                   {site.temperatureProfile.note}
@@ -311,13 +311,13 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
               <div className={`p-3.5 space-y-1 ${tokens.subCard}`}>
                 <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
                   <Mountain className="w-3.5 h-3.5" />
-                  Kondisi Terrain & pH
+                  Terrain Conditions & pH
                 </div>
                 <div className={`text-xs font-medium ${tokens.heading}`}>
                   {site.terrainProfile.surfaceType}
                 </div>
                 <div className={`text-xs font-mono-tabular ${tokens.mutedText}`}>
-                  {site.terrainProfile.roughness} · Lereng {site.terrainProfile.slopeRange} · pH {site.terrainProfile.acidityPh}
+                  {site.terrainProfile.roughness} · Slope {site.terrainProfile.slopeRange} · pH {site.terrainProfile.acidityPh}
                 </div>
                 <p className={`text-xs leading-relaxed ${tokens.bodyText}`}>
                   {site.terrainProfile.description}
@@ -328,7 +328,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
               <div className={`p-3.5 space-y-1 ${tokens.subCard}`}>
                 <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
                   <Calendar className="w-3.5 h-3.5" />
-                  Musim Uji Terbaik
+                  Best Testing Season
                 </div>
                 <div className={`text-xs font-medium ${tokens.heading}`}>
                   {site.seasonalRecommendation.bestWindow}
@@ -342,7 +342,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
               <div className="space-y-2.5 flex-1">
                 <div className={`text-xs font-semibold flex items-center gap-1.5 ${tokens.accentText}`}>
                   <ShieldCheck className="w-3.5 h-3.5" />
-                  Rekomendasi Material ({recs.length})
+                  Material Recommendations ({recs.length})
                 </div>
                 <div className="space-y-2">
                   {recs.map((rec) => {
@@ -362,7 +362,7 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
                             #{rec.rank} {rec.material.name}
                           </span>
                           <span className={`text-xs font-mono-tabular font-semibold shrink-0 ${band.textClass}`}>
-                            {rec.score}% · {band.label}{isShared ? ' · Lintas Situs' : ''}
+                            {rec.score}% · {band.label}{isShared ? ' · Cross-Site' : ''}
                           </span>
                         </div>
                         <div className={`text-[11px] mt-1 ${tokens.bodyText}`}>
@@ -380,14 +380,14 @@ export const CompareSitesPage: React.FC<CompareSitesPageProps> = ({
         {/* Bottom Actions */}
         <div className={`p-4 flex flex-wrap items-center justify-between gap-3 ${tokens.card}`}>
           <span className={`text-xs ${tokens.mutedText}`}>
-            Klik salah satu material untuk berpindah ke halaman Info Material dan melihat detail fisikanya.
+            Click a material to jump to the Material Info page and view its physical details.
           </span>
           <button
             type="button"
             onClick={onExitCompare}
             className={`px-4 py-2 rounded-lg text-xs transition-colors ${tokens.primaryButton}`}
           >
-            Selesai & Kembali ke Peta
+            Done & Back to Map
           </button>
         </div>
       </div>
