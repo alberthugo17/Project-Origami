@@ -1,5 +1,5 @@
 import React, { useMemo, useState } from 'react';
-import { ArrowLeft, Database, ExternalLink, Search } from 'lucide-react';
+import { ArrowLeft, Database, ExternalLink, FileText, Search } from 'lucide-react';
 import { ANALOG_SITES } from '../data/analogSites';
 import { DATA_SOURCES, DataBodyFilter } from '../data/dataSources';
 import { filterDataSources } from '../utils/analogFilter';
@@ -36,8 +36,8 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
     >
       <div className="max-w-6xl mx-auto px-4 md:px-8 space-y-6">
         {/* Header */}
-        <div className="flex flex-wrap items-start justify-between gap-4 pt-3">
-          <div className="space-y-2 max-w-3xl">
+        <div className="space-y-3 pt-3">
+          <div className="flex items-center justify-between gap-3 flex-wrap">
             <div className="flex items-center gap-3 flex-wrap">
               <button
                 type="button"
@@ -53,16 +53,32 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                 <span>Inventaris Data Terbuka Bumi, Bulan & Mars</span>
               </div>
             </div>
-            <h1 className={`font-display text-2xl md:text-3xl font-extrabold tracking-tight ${tokens.heading}`}>
-              Sumber Informasi & <span className={tokens.highlighter}>Dataset Analisis</span>
-            </h1>
-            <p className={`text-sm leading-relaxed ${tokens.bodyText}`}>
-              Karakterisasi {ANALOG_SITES.length} situs analog menggunakan data penginderaan jauh terbuka dari NASA, ESA, USGS Astrogeology, JAXA, serta BIG/PVMBG Indonesia.
-            </p>
+
+            <a
+              href="./docs/analisis-data.pdf"
+              target="_blank"
+              rel="noopener noreferrer"
+              data-testid="data-analysis-pdf-btn"
+              className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 ${tokens.primaryButton}`}
+            >
+              <FileText className="w-3.5 h-3.5" />
+              <span>Analisis Data</span>
+            </a>
           </div>
-          {tokens.isCartoon && (
-            <CartoonPageStickers colorTheme={colorTheme} badgeText="DATA TERBUKA NASA/ESA" />
-          )}
+
+          <div className="flex flex-wrap items-start justify-between gap-4">
+            <div className="space-y-2 max-w-3xl">
+              <h1 className={`font-display text-2xl md:text-3xl font-extrabold tracking-tight ${tokens.heading}`}>
+                Sumber Informasi & <span className={tokens.highlighter}>Dataset Analisis</span>
+              </h1>
+              <p className={`text-sm leading-relaxed ${tokens.bodyText}`}>
+                Karakterisasi {ANALOG_SITES.length} situs analog menggunakan data penginderaan jauh terbuka dari NASA, ESA, USGS Astrogeology, JAXA, serta BIG/PVMBG Indonesia.
+              </p>
+            </div>
+            {tokens.isCartoon && (
+              <CartoonPageStickers colorTheme={colorTheme} badgeText="DATA TERBUKA NASA/ESA" />
+            )}
+          </div>
         </div>
 
         {/* Filter & Search Toolbar */}
