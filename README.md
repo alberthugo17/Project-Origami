@@ -1,6 +1,8 @@
-# Origami: NASA Planetary Analog Explorer
+# PROJECT O.R.I.G.A.M.I
+# Observasi Ruang & Integrasi Geospasial Analog Misi Interplanet
+# (Space Observation & Analog Geospatial Integration for Interplanetary Missions)
 
-**Planetary Analog & Aerospace Material Explorer**: an interactive geospatial web application for mapping analog sites on Earth for prospective landing sites and bases on the **Moon** and **Mars**, while simultaneously evaluating aerospace material suitability at each location.
+**Origami**: an interactive geospatial web application for mapping analog sites on Earth for prospective landing sites and bases on the **Moon** and **Mars**, while simultaneously evaluating aerospace material suitability at each location.
 
 Developed for **NASA Space Apps Challenge, Local Event Surabaya (November 14-15, 2026)**.
 
@@ -90,24 +92,5 @@ Click a pin or a site in the catalog to fly the map to that location and open a 
 - Catalog of **13 official datasets** from NASA, ESA, JAXA, USGS, PGC ArcticDEM, BIG/PVMBG, and Esri, complete with instruments, resolution, and the role of each dataset.
 - Filter by target (Moon, Mars, Earth) and link to the data analysis document (`public/docs/analisis-data.pdf`).
 
-## Project Structure
-
-```
-.
-├── src/
-│   ├── App.tsx, main.tsx, index.css
-│   ├── components/     Map, analysis panel, comparison, material info, data sources
-│   ├── data/           Analog site data, materials, data sources, coastlines
-│   ├── types/          Theme tokens (dark/light, realistic/cartoon)
-│   └── utils/          Site scoring, material matching, filters, geoMath (+ unit tests)
-├── public/             Static assets (logo, data analysis PDF, pitch deck PDF)
-├── .github/workflows/  GitHub Pages deployment automation (deploy.yml)
-├── Proposal_Origami_CyberLife_BT.docx
-├── Origami_Pitch_Deck_Updated.pptx
-├── run.bat / run.sh    Scripts to run the application
-└── package.json, vite.config.ts, tsconfig.json, index.html
-```
-
 ## Note
-
 The data and scores in this application are summaries for competition and demonstration purposes. Verify with official sources (NASA, ESA, USGS) before using them as scientific references.
