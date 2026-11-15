@@ -1,7 +1,6 @@
-# PROJECT O.R.I.G.A.M.I
-# Observasi Ruang & Integrasi Geospasial Analog Misi Interplanet
+# Origami: NASA Planetary Analog Explorer
 
-**Origami**: aplikasi web geospasial interaktif untuk memetakan situs analog di Bumi bagi calon lokasi pendaratan dan markas di **Bulan** dan **Mars**, sekaligus mengevaluasi kecocokan material dirgantara pada setiap lokasi.
+**Planetary Analog & Aerospace Material Explorer**: aplikasi web geospasial interaktif untuk memetakan situs analog di Bumi bagi calon lokasi pendaratan dan markas di **Bulan** dan **Mars**, sekaligus mengevaluasi kecocokan material dirgantara pada setiap lokasi.
 
 Dikembangkan untuk **NASA Space Apps Challenge, Local Event Surabaya (14-15 November 2026)**.
 
@@ -13,8 +12,6 @@ Dikembangkan untuk **NASA Space Apps Challenge, Local Event Surabaya (14-15 Nove
 | 2 | I Kadek Mahesa Arta Wibawa |
 | 3 | Yosua Gavrilla Santoso |
 | 4 | Nirwasita Dwi Ardiyanti |
-
-<img width="1280" height="720" alt="image" src="https://github.com/user-attachments/assets/47e5e7d0-dbfa-46b4-995e-4a1ddb3bb5fe" />
 
 Teknologi: React 19, TypeScript, Tailwind CSS v4, Leaflet (citra satelit Esri), Motion, dan Vite. **Tidak membutuhkan API key.**
 
