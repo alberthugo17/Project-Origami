@@ -149,8 +149,8 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                 key={src.id}
                 className={`p-5 transition-colors ${tokens.card}`}
               >
-                <div className="flex flex-wrap items-start justify-between gap-3">
-                  <div>
+                <div className="flex items-start justify-between gap-3">
+                  <div className="min-w-0 flex-1">
                     <div className={`flex items-center gap-2 text-xs flex-wrap ${tokens.mutedText}`}>
                       <span className={`font-semibold ${tokens.accentText}`}>{src.agency}</span>
                       <span aria-hidden="true">·</span>
@@ -166,7 +166,7 @@ export const DataSourcesPage: React.FC<DataSourcesPageProps> = ({
                     href={src.accessUrl.split(' / ')[0]}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 ${tokens.secondaryButton}`}
+                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs transition-colors whitespace-nowrap shrink-0 self-start ${tokens.secondaryButton}`}
                   >
                     Portal Resmi
                     <ExternalLink className="w-3.5 h-3.5" />

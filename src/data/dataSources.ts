@@ -190,9 +190,9 @@ export const DATA_SOURCES: DataSourceItem[] = [
     resolution: '8.25 m (0.27 arc-second DEMNAS)',
     variablesExtracted: 'Elevasi detail Kaldera Tengger–Bromo & Kawah Ijen, litologi tefra, kimia danau asam & zona bahaya SO₂',
     roleInAnalysis:
-      'Mendukung pemodelan topografi resolusi tinggi di Kawah Ijen (analog danau asam Mars tervalidasi jurnal) dan karakterisasi eksploratif Kaldera Tengger–Bromo.',
+      'Mendukung pemodelan topografi resolusi tinggi di Kawah Ijen (analog danau asam Mars tervalidasi jurnal) dan karakterisasi eksploratif Kaldera Tengger–Bromo. DEMNAS diunduh gratis lewat Ina-Geoportal BIG (menu Unduh Data > DEMNAS; perlu akun).',
     datasetIdentifier: 'DEMNAS BIG (0.27 arc-sec) & Peta Geologi Gunungapi PVMBG',
-    accessUrl: 'https://tanahair.indonesia.go.id/demnas/',
+    accessUrl: 'https://tanahair.indonesia.go.id/portal-web/',
     scientificReference: 'Delmelle & Bernard (1994), Geochim. Cosmochim. Acta 58 (Ijen) & Hilyah et al. (2026), Annals of Geophysics (Tengger Caldera)',
     referenceUrl: 'https://doi.org/10.1016/0016-7037(94)90023-X',
   },
