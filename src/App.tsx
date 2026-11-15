@@ -282,7 +282,7 @@ export default function App() {
       data-visual-style={visualStyle}
       data-color-theme={colorTheme}
       data-active-page={activePage}
-      className={`relative w-screen h-screen overflow-hidden transition-colors duration-200 ${tokens.pageCanvas}`}
+      className={`relative w-full h-screen h-dvh overflow-hidden transition-colors duration-200 ${tokens.pageCanvas}`}
     >
       {/* Translucent Floating Top Header (Persistent Across All Pages) */}
       <TopBar
@@ -436,9 +436,12 @@ export default function App() {
           </div>
         )}
 
-        {/* Bottom-Right Cluster: Desktop (Zoom -> Legend -> Scale) | Mobile (Zoom -> Scale -> Legend) */}
+        {/* Bottom-Right Cluster: Zoom -> Legend -> Scale (Fixed to visual viewport like bottom-left style button) */}
         {isMapVisible && (
-          <div className="pointer-events-none absolute bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-2">
+          <div
+            data-testid="map-bottom-right-hud"
+            className="pointer-events-none fixed bottom-3 right-3.5 z-[1040] flex flex-col items-end gap-2 max-w-[calc(100vw-1.75rem)]"
+          >
             {/* 1. History Back/Forward + Zoom Control Cluster (Always Top) */}
             <div className="order-1 pointer-events-auto flex items-center gap-2">
               {history.length > 1 && (
@@ -505,11 +508,11 @@ export default function App() {
               </div>
             </div>
 
-            {/* 2. Pin Color Legend (Bottom on Mobile, Middle on Desktop) + Info Tooltip */}
+            {/* 2. Pin Color Legend + Info Tooltip */}
             <div
               ref={legendRef}
               data-testid="map-pin-legend"
-              className={`order-3 sm:order-2 pointer-events-auto relative flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-1 ${tokens.panel}`}
+              className={`order-2 pointer-events-auto relative flex items-center gap-1.5 sm:gap-3 text-[10px] sm:text-[11px] px-2 sm:px-2.5 py-1 ${tokens.panel}`}
             >
               <span className={`inline-flex items-center gap-1 sm:gap-1.5 ${tokens.bodyText}`}>
                 <span className="w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-[#3b82f6] shrink-0" />
@@ -547,7 +550,7 @@ export default function App() {
                 <div
                   role="tooltip"
                   data-testid="legend-info-tooltip"
-                  className={`absolute bottom-full right-0 mb-[84px] sm:mb-[52px] w-64 sm:w-72 max-w-[calc(100vw-1.75rem)] p-3 text-[11px] leading-relaxed z-[1070] shadow-2xl ${
+                  className={`absolute bottom-full right-0 mb-[52px] w-64 sm:w-72 max-w-[calc(100vw-1.75rem)] p-3 text-[11px] leading-relaxed z-[1070] shadow-2xl ${
                     tokens.isCartoon
                       ? tokens.panel
                       : tokens.isDark
@@ -565,8 +568,8 @@ export default function App() {
               )}
             </div>
 
-            {/* 3. Scale Bar + Live Camera Altitude & DMS Coordinates (Middle on Mobile, Bottom on Desktop) */}
-            <div className={`order-2 sm:order-3 pointer-events-auto flex items-end gap-2.5 text-[11px] font-mono-tabular px-2.5 py-1 ${tokens.panel}`}>
+            {/* 3. Scale Bar + Live Camera Altitude & DMS Coordinates */}
+            <div className={`order-3 pointer-events-auto flex items-end gap-2.5 text-[11px] font-mono-tabular px-2.5 py-1 ${tokens.panel}`}>
               <div className="hidden sm:flex flex-col items-end">
                 <span className={`text-[10px] mb-0.5 ${tokens.mutedText}`}>{scaleBar.label}</span>
                 <div
