@@ -1,6 +1,7 @@
-# Origami: NASA Planetary Analog Explorer
+# PROJECT O.R.I.G.A.M.I
+# Observasi Ruang & Integrasi Geospasial Analog Misi Interplanet
 
-**Planetary Analog & Aerospace Material Explorer**: aplikasi web geospasial interaktif untuk memetakan situs analog di Bumi bagi calon lokasi pendaratan dan markas di **Bulan** dan **Mars**, sekaligus mengevaluasi kecocokan material dirgantara pada setiap lokasi.
+**Origami**: aplikasi web geospasial interaktif untuk memetakan situs analog di Bumi bagi calon lokasi pendaratan dan markas di **Bulan** dan **Mars**, sekaligus mengevaluasi kecocokan material dirgantara pada setiap lokasi.
 
 Dikembangkan untuk **NASA Space Apps Challenge, Local Event Surabaya (14-15 November 2026)**.
 
